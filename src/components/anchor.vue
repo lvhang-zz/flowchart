@@ -15,6 +15,9 @@
         <div class="btn"  :class="actionNodeType=='rhombus'?'btnActive':''" @click="addRhombus" title="条件节点">
           <i class="iconfont icon-lingxing"></i>
         </div>
+        <div class="btn"  :class="actionNodeType=='rhombus'?'btnActive':''"  @mousedown="addRhombusDown" @mouseup="addRhombusUp"  title="条件节点">
+          <i class="iconfont icon-lingxing"></i>
+        </div>
       </div>
       <div class="btn-group">
         <div class="btn"  :class="actionNodeType=='line'?'btnActive':''" @click="addLine" title="直线">
@@ -135,6 +138,7 @@
                 </el-option>
               </el-select>
             </el-form-item>
+            <el-form-item label="方向"></el-form-item>
           </el-form>
         </div>
       </div>
@@ -143,6 +147,12 @@
     <div style="position: fixed;right: 0;top: 0;z-index: 9999">
       <button @click="showJson">显示数据</button>
       <button @click="goNew">新页面</button>
+      <button @click="tofitView">自动适应</button>
+    </div>
+    <div class="d_fixed" ref="d_fixed">
+      <div class="btn"  @mouseup="addRhombusUp"  title="条件节点">
+        <i class="iconfont icon-lingxing"></i>
+      </div>
     </div>
   </div>
 </template>
@@ -155,21 +165,19 @@
 
     },
     mounted() {
+      let self = this;
       this.initG6();
       //添加键盘事件
       let _self = this;
       document.onkeydown = function(e){
-
         let key = window.event.keyCode;
-        console.log(key);
         if(key === 46){//删除键
-          _self.net.del();
+          self.del();
         }
-        if(key === 18){
+        if(key === 18){//alt键拖拽
           _self.changeMode('drag');
         }
-        if(key === 17){
-          //按住ctrl键 拖拽
+        if(key === 17){//alt键拖拽
           _self.changeMode('drag');
         }
       };
@@ -347,7 +355,14 @@
          self.net.edge().tooltip(['label', 'color']);*/
         //渲染
         /*self.net.source(self.nodes, self.edges);*/  //加载资源数据
-        self.net.render();
+
+        //加载缓存中的数据
+        let currentdata = JSON.parse(sessionStorage.getItem("currentdata"));
+        if(currentdata){
+          self.net.changeData(currentdata);
+        }else {
+          self.net.render();
+        }
       },
       //添加起始节点
       addCircle() {
@@ -372,6 +387,32 @@
           nodeType: 0
         });
         this.actionNodeType = "rhombus";
+      },
+      //
+      addRhombusDown(e){
+        console.log("哈哈哈哈");
+        let self = this;
+        // this.tofitView();
+        this.$refs.d_fixed.style.display = "block";
+        this.$refs.d_fixed.style.left = e.clientX  - 16  +'px';
+        this.$refs.d_fixed.style.top = e.clientY - 16  +'px';
+        self.net.on("mousemove",ev =>{
+          console.log(ev);
+          self.$refs.d_fixed.style.left = ev.domEvent.clientX  - 16  +'px';
+          self.$refs.d_fixed.style.top = ev.domEvent.clientY - 16  +'px';
+        });
+      },
+      addRhombusUp(e){
+        this.$refs.d_fixed.style.display = "none";
+        console.log(e);
+        this.net.offEvents("mousemove");//解绑事件
+        let model = {
+          shape: 'rhombus',
+          nodeType: 0,
+          x:e.clientX,
+          y:e.clientY
+        };
+        this.net.add("node", model)
       },
       //添加直线
       addLine() {
@@ -415,7 +456,11 @@
       },
       //删除
       del() {
-        this.net.del()
+        this.net.del();
+        let self = this;
+        // setTimeout(function () {
+        //   self.update();
+        // },100)
       },
       //保存
       save() {
@@ -443,6 +488,7 @@
       },
       //更新节点
       update() {
+        let self = this;
         if (this.activation.get('type') === 'node') {
           this.net.update(this.activation, {
             label: this.name,
@@ -468,6 +514,10 @@
             shape:shape
           });
         }
+        setTimeout(function () {
+          let currentdata = JSON.stringify(self.net.save().source);
+          sessionStorage.setItem("currentdata",currentdata);
+        },100)
       },
       //清空视图
       clearView() {
@@ -485,7 +535,7 @@
       showJson(){
         /* self.net.node().tooltip(['label', 'func', 'role', 'color']);
          self.net.edge().tooltip(['label', 'color']);*/
-        // console.log(this.net.save());//获取当前画布的数据
+        console.log(this.net.save().source);//获取当前画布的数据
         // console.log(this.activation);
         if(this.net.getNodes()){
           let nodeArr =  this.net.getNodes().map((item)=>{
@@ -513,6 +563,10 @@
             }
           })
         },1000)
+      },
+      //
+      tofitView(){
+        this.net.resetZoom();
       }
     },
     watch: {
@@ -643,5 +697,24 @@
     .el-form-item {
       margin-bottom: 0 !important;
     }
+  }
+  .d_fixed{
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    margin: 2px;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid rgba(233, 233, 233, 0);
+    display: none;
+    /*background-color: darkcyan;*/
+    i{
+      font-size: 20px;
+    }
+
   }
 </style>
