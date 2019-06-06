@@ -15,9 +15,6 @@
         <div class="btn"  :class="actionNodeType=='rhombus'?'btnActive':''" @click="addRhombus" title="条件节点">
           <i class="iconfont icon-lingxing"></i>
         </div>
-        <div class="btn"  :class="actionNodeType=='rhombus'?'btnActive':''"  @mousedown="addRhombusDown" @mouseup="addRhombusUp"  title="条件节点">
-          <i class="iconfont icon-lingxing"></i>
-        </div>
       </div>
       <div class="btn-group">
         <div class="btn"  :class="actionNodeType=='line'?'btnActive':''" @click="addLine" title="直线">
@@ -61,9 +58,20 @@
       <div class="content">
         <!--右侧-->
         <el-checkbox v-if="isBlank === true" v-model="checked">网格对齐</el-checkbox>
+        <!--节点 node-->
         <el-form v-if="isNode === true && isBlank != true"  label-position="left" label-width="60px">
           <el-form-item  label="名称">
             <el-input ref="input1" size="mini" v-model="name"></el-input>
+          </el-form-item>
+          <el-form-item label="形状">
+            <el-select v-model="activeShape" size="mini" filterable placeholder="请选择形状" value="">
+              <el-option
+                v-for="item in nodeStyleArr"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value">
+              </el-option>
+            </el-select>
           </el-form-item>
           <el-form-item label="功能">
             <el-select v-model="func" size="mini" filterable placeholder="绑定功能" value="">
@@ -110,26 +118,17 @@
             <el-color-picker v-model="color"></el-color-picker>
           </el-form-item>
         </el-form>
+        <!--边 edge-->
         <div v-if="isNode !== true && isBlank != true" >
           <el-form label-position="left" label-width="60px">
-            <!--<el-form-item  label="动作">-->
-              <!--<el-select v-model="action" size="mini" filterable placeholder="绑定动作" value="">-->
-                <!--<el-option-->
-                  <!--v-for="item in actionList"-->
-                  <!--:key="item.id"-->
-                  <!--:label="item.label"-->
-                  <!--:value="item.id">-->
-                <!--</el-option>-->
-              <!--</el-select>-->
-            <!--</el-form-item>   &lt;!&ndash;isNode !== true 线&ndash;&gt;-->
-            <el-form-item  label="修改信息">
-              <el-input ref="input2" size="mini" v-model="edgeText"></el-input>
+            <el-form-item  label="信息">
+              <el-input ref="input2" size="mini" v-model="name"></el-input>
             </el-form-item>   <!-- 线-->
             <el-form-item label="颜色">
               <el-color-picker v-model="color"></el-color-picker>
             </el-form-item>
             <el-form-item label="线条">
-              <el-select v-model="edgeType" size="mini" filterable placeholder="请选择线类型" value="">
+              <el-select v-model="activeShape" size="mini" filterable placeholder="请选择线类型" value="">
                 <el-option
                   v-for="item in lineArr"
                   :key="item.value"
@@ -138,16 +137,27 @@
                 </el-option>
               </el-select>
             </el-form-item>
+            <el-form-item label="粗细">
+              <el-select v-model="lineWidth" size="mini" filterable placeholder="调整粗细" value="">
+                <el-option
+                  v-for="item in lineWidthArr"
+                  :key="item"
+                  :label="item"
+                  :value="item">
+                </el-option>
+              </el-select>
+            </el-form-item>
+
             <el-form-item label="方向"></el-form-item>
           </el-form>
         </div>
       </div>
     </div>
     <!--其他操作-->
-    <div style="position: fixed;right: 0;top: 0;z-index: 9999">
-      <button @click="showJson">显示数据</button>
-      <button @click="goNew">新页面</button>
-      <button @click="tofitView">自动适应</button>
+    <div style="position: fixed;right: 222px;top: 0;z-index: 9999">
+      <button @click="showJson">showJson</button>
+      <button @click="goNew">toNew</button>
+      <button @click="tofitView">autosize</button>
     </div>
     <div class="d_fixed" ref="d_fixed">
       <div class="btn"  @mouseup="addRhombusUp"  title="条件节点">
@@ -190,6 +200,12 @@
           _self.changeMode('edit');
         }
       }
+      //浏览器的刷新事件
+      window.onbeforeunload = function (e) {
+        let currentdata = JSON.stringify(self.net.save().source);
+        sessionStorage.setItem("currentdata",currentdata);
+        console.log("刷新");
+      }
     },
     props: {
       actionList: {
@@ -217,8 +233,9 @@
     data() {
       return {
         action: '',
-        name: '',
+        name: '',//当前节点 / 边的text
         func: '',
+        detailMsg:"",//当前节点的详细信息
         account: '',
         workflow: '',
         nodeType: 0,
@@ -237,8 +254,7 @@
         edgeArr:'',
         activeType:"edit",//当前所处的模式
         actionNodeType:"",// 当前要添加的节点样式
-        edgeText:"",//当前选中的线的文案
-        edgeType:"",//当前选中的线的类型
+        activeShape:"",//当前选中的 节点/线 的shape值 即形状 
         lineArr:[
           {
             label:"直线",
@@ -256,7 +272,29 @@
             label:"箭头曲线",
             value:"smoothArrow"
           }
-        ]//线的样式
+        ],//线的样式
+        nodeStyleArr:[
+          {
+            label:"矩形",
+            value:'rect'
+          },
+          {
+            label:"圆形",
+            value:'circle'
+          },
+          {
+            label:"菱形",
+            value:'rhombus'
+          },
+          // {
+          //   label:"自定义",
+          //   value:'customNode'
+          // }
+        ],//节点的样式集合
+        lineWidthArr:[
+          1,2,3,4,6,8
+        ],
+        lineWidth:''//当前line的宽度
       }
     },
     methods: {
@@ -272,7 +310,7 @@
         } else {
           grid = null;
         }
-        // self.net  画布实例  初始化画布
+        // 初始化画布
         self.net = new G6.Net({
           id: 'flowChart',      // 容器ID
           mode: 'edit',
@@ -280,13 +318,29 @@
           /*width: 500,    // 画布宽*/
           height: 800 ,   // 画布高
         });
-        /*self.net.tooltip({
-          title: '信息', // @type {String} 标题
-          split: ':',  // @type {String} 分割符号
-          dx: 0,       // @type {Number} 水平偏移
-          dy: 0        // @type {Number} 竖直偏移
-        });*/
-
+        //注册自定义节点
+        G6.registNode('customNode', {
+          draw: function(cfg, group){
+            var text = group.addShape('text', {
+              attrs: {
+                x: 100,
+                y: 100,
+                fill: '#333',
+                text: '我是一个自定义节点，\n有下面那个方形和我自己组成'
+              }
+            });
+            var rect = group.addShape('rect', {
+              attrs: {
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 100,
+                stroke: 'red'
+              }
+            });
+            return rect;
+          }
+        });
         //点击空白处
         self.net.on('click', (ev) => {
           // console.log("点击空白区");
@@ -296,7 +350,6 @@
             self.isBlank = true;
             self.infoTitle = '画布'
           }
-          this.actionNodeType = ''
         });
         //点击节点
         self.net.on('itemclick', function (ev) {
@@ -313,11 +366,13 @@
             self.account = ev.item.get('model').account || [];
             self.workflow = ev.item.get('model').workflow;
             self.nodeType = ev.item.get('model').nodeType;
+            self.activeShape = ev.item.get('model').shape;
           } else {
             self.infoTitle = '边';
             self.action = ev.item.get('model').action;
-            self.edgeType = ev.item.get('model').shape;
-            self.edgeText = ev.item.get('model').label;
+            self.activeShape = ev.item.get('model').shape;
+            self.name = ev.item.get('model').label;
+            self.lineWidth = ev.item.get('model').size || 1;
           }
           self.color = self.oldColor;
         });
@@ -349,6 +404,11 @@
           } else {
             document.querySelectorAll("canvas")[1].style.cursor = "move";
           }
+        });
+        //鼠标左键抬起事件
+        self.net.on('mouseup', ev => {
+          this.actionNodeType = ''
+
         });
         //提示信息
         /* self.net.node().tooltip(['label', 'func', 'role', 'color']);
@@ -388,9 +448,8 @@
         });
         this.actionNodeType = "rhombus";
       },
-      //
+      //拖拽在添加元素 有bug 未实现
       addRhombusDown(e){
-        console.log("哈哈哈哈");
         let self = this;
         // this.tofitView();
         this.$refs.d_fixed.style.display = "block";
@@ -458,9 +517,10 @@
       del() {
         this.net.del();
         let self = this;
-        // setTimeout(function () {
-        //   self.update();
-        // },100)
+        setTimeout(function () {
+          let currentdata = JSON.stringify(self.net.save().source);
+          sessionStorage.setItem("currentdata",currentdata);
+        },100)
       },
       //保存
       save() {
@@ -489,6 +549,10 @@
       //更新节点
       update() {
         let self = this;
+        let style = {
+          fontSize:20,
+          color:"red"
+        };
         if (this.activation.get('type') === 'node') {
           this.net.update(this.activation, {
             label: this.name,
@@ -496,7 +560,12 @@
             account: this.account,
             workflow: this.workflow,
             nodeType: this.nodeType,
-            color: this.color
+            color: this.color,
+            stroke:"blue",
+            fill: this.color,
+            shape: this.activeShape,
+            detailMsg:this.detailMsg,
+            style:style
           });
         } else {
           /* 根据ID取出label*/
@@ -505,19 +574,14 @@
           //     return item.label
           //   }
           // }).join('');
-          let label = this.edgeText;
-          let shape = this.edgeType;
           this.net.update(this.activation, {
-            label: label,
+            label: this.name,
             color: this.color,
             action: this.action,
-            shape:shape
+            shape:this.activeShape,
+            size:this.lineWidth // 线的粗细
           });
         }
-        setTimeout(function () {
-          let currentdata = JSON.stringify(self.net.save().source);
-          sessionStorage.setItem("currentdata",currentdata);
-        },100)
       },
       //清空视图
       clearView() {
@@ -549,6 +613,7 @@
           });
           this.edgeArr = edgeArr;
         }
+        this.$emit("jsonData",this.net.save().source);
       },
       //去新页面
       goNew(){
@@ -592,10 +657,10 @@
       color: function () {
         this.update()
       },
-      edgeText(){
+      lineWidth(){
         this.update()
       },
-      edgeType(){
+      activeShape(){
         this.update()
       },
       //网格切换

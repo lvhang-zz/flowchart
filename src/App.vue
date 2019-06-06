@@ -15,4 +15,7 @@ export default {
     padding: 0;
     margin: 0;
   }
+  .el-form-item{
+    margin-bottom: 0;
+  }
 </style>
