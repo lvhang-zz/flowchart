@@ -1,7 +1,7 @@
 # anhor
 
 > A Vue.js project
-
+> 基于 vue G6 的前端自定义流程图工具
 ## Build Setup
 
 ``` bash
