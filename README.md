@@ -2,6 +2,7 @@
 
 > A Vue.js project
 > 基于 vue G6 的前端自定义流程图工具
+> vue.js elementUi antv/g6
 ## Build Setup
 
 ``` bash

@@ -1,5 +1,6 @@
 <template>
     <div id="flowChart">
+      <div>this is second page</div>
 
     </div>
 </template>
