@@ -158,6 +158,8 @@
       <button @click="showJson">showJson</button>
       <button @click="goNew">toNew</button>
       <button @click="tofitView">autosize</button>
+      <button @click="addTest">addNum</button>
+      <span>{{$store.state.num}}</span>
     </div>
     <div class="d_fixed" ref="d_fixed">
       <div class="btn"  @mouseup="addRhombusUp"  title="条件节点">
@@ -294,7 +296,7 @@
         lineWidthArr:[
           1,2,3,4,6,8
         ],
-        lineWidth:''//当前line的宽度
+        lineWidth:'',//当前line的宽度
       }
     },
     methods: {
@@ -632,6 +634,9 @@
       //
       tofitView(){
         this.net.resetZoom();
+      },
+      addTest(){
+        this.$store.commit("add")
       }
     },
     watch: {

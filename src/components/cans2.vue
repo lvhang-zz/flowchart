@@ -1,6 +1,7 @@
 <template>
     <div id="flowChart">
       <div>this is second page</div>
+      <h2>{{$store.state.num}}</h2>
 
     </div>
 </template>
