@@ -8,7 +8,6 @@
       </div>
     </div>
 </template>
-
 <script>
   import anchor from "./anchor"
   export default {

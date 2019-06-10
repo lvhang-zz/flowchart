@@ -450,7 +450,7 @@
         });
         this.actionNodeType = "rhombus";
       },
-      //拖拽在添加元素 有bug 未实现
+      //拖拽在添加元素 bug
       addRhombusDown(e){
         let self = this;
         // this.tofitView();
