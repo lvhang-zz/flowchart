@@ -5,7 +5,9 @@
       </anchor>
       <div style="position: fixed;bottom: 0;left: 0">
         <button @click="showData">父页面获取数据</button>
+        <button @click="doIt">显示错误</button>
       </div>
+
     </div>
 </template>
 <script>
@@ -27,12 +29,17 @@
         nodeTypeList:	[
           {id: 0, label: '普通节点'},
           {id: 1, label: '入口节点'},
-          {id: 2, label: '出口节点'}
+          {id: 2, label: '出口节点'},
+          {id: 3, label: '活动模板编辑'},
+
         ],
         data:''
       }
     },
     methods:{
+      doIt(){
+        return x;
+      },
       getJson(data){
         this.data = data;
       },

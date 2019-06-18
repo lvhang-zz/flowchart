@@ -15,6 +15,9 @@
         <div class="btn"  :class="actionNodeType=='rhombus'?'btnActive':''" @click="addRhombus" title="条件节点">
           <i class="iconfont icon-lingxing"></i>
         </div>
+        <div class="btn"  :class="actionNodeType=='rhombus2'?'btnActive':''" @click="addRhombus2" title="条件节点2">
+          <i class="iconfont icon-lingxing"></i>
+        </div>
       </div>
       <div class="btn-group">
         <div class="btn"  :class="actionNodeType=='line'?'btnActive':''" @click="addLine" title="直线">
@@ -51,16 +54,17 @@
       <!--</div>-->
     </div>
     <!--右侧功能页-->
-    <div class="info">
+    <div class="info" :class="activation == ''?'':'infoShow'">
       <div class="title">
-        <span>{{infoTitle}}属性</span>
+        <span v-show="nodeType !== 3">{{infoTitle}}属性</span>
+        <span class="closeRight" @click="closeRight">关闭</span>
       </div>
       <div class="content">
         <!--右侧-->
         <el-checkbox v-if="isBlank === true" v-model="checked">网格对齐</el-checkbox>
         <!--节点 node-->
-        <el-form v-if="isNode === true && isBlank != true"  label-position="left" label-width="60px">
-          <el-form-item  label="名称">
+        <el-form v-if="isNode === true && isBlank != true && nodeType !== 3"  label-position="left" label-width="60px">
+          <el-form-item label="名称">
             <el-input ref="input1" size="mini" v-model="name"></el-input>
           </el-form-item>
           <el-form-item label="形状">
@@ -94,7 +98,7 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item  label="流图">
+          <el-form-item label="流图">
             <el-select v-model="workflow" size="mini" filterable clearable placeholder="绑定流图" value="">
               <el-option
                 v-for="item in workflowList"
@@ -118,6 +122,15 @@
             <el-color-picker v-model="color"></el-color-picker>
           </el-form-item>
         </el-form>
+        <!---->
+        <div v-if="isNode === true && isBlank != true && nodeType == 3" >
+          <el-form  label-position="left" label-width="60px">
+            <el-form-item  label="名称">
+              <el-input ref="input1" size="mini" v-model="name"></el-input>
+            </el-form-item>
+          </el-form>
+          <activitycenter></activitycenter>
+        </div>
         <!--边 edge-->
         <div v-if="isNode !== true && isBlank != true" >
           <el-form label-position="left" label-width="60px">
@@ -147,7 +160,6 @@
                 </el-option>
               </el-select>
             </el-form-item>
-
             <el-form-item label="方向"></el-form-item>
           </el-form>
         </div>
@@ -170,9 +182,12 @@
 </template>
 <script>
   import G6 from "@antv/g6";
+  import activitycenter from "../components/activitycenter.vue";
   export default {
     name: "index",
-    components: {},
+    components: {
+      activitycenter,
+    },
     created(){
 
     },
@@ -227,7 +242,8 @@
           return [
             {id: 0, label: '普通节点'},
             {id: 1, label: '入口节点'},
-            {id: 2, label: '出口节点'}
+            {id: 2, label: '出口节点'},
+            {id: 3, label: '活动模板编辑'},
           ]
         }
       }
@@ -345,12 +361,13 @@
         });
         //点击空白处
         self.net.on('click', (ev) => {
-          // console.log("点击空白区");
           if (!self.Util.isNull(ev.item)) {
             self.isBlank = false
           } else {
             self.isBlank = true;
-            self.infoTitle = '画布'
+            self.infoTitle = '画布';
+            // console.log("点击画布");
+            self.activation = "";
           }
         });
         //点击节点
@@ -417,7 +434,6 @@
          self.net.edge().tooltip(['label', 'color']);*/
         //渲染
         /*self.net.source(self.nodes, self.edges);*/  //加载资源数据
-
         //加载缓存中的数据
         let currentdata = JSON.parse(sessionStorage.getItem("currentdata"));
         if(currentdata){
@@ -446,9 +462,17 @@
       addRhombus() {
         this.net.beginAdd('node', {
           shape: 'rhombus',
-          nodeType: 0
+          nodeType: 0,
+
         });
         this.actionNodeType = "rhombus";
+      },
+      addRhombus2() {
+        this.net.beginAdd('node', {
+          shape: 'rhombus',
+          nodeType: 3
+        });
+        this.actionNodeType = "rhombus2";
       },
       //拖拽在添加元素 bug
       addRhombusDown(e){
@@ -637,6 +661,9 @@
       },
       addTest(){
         this.$store.commit("add")
+      },
+      closeRight(){
+        this.activation = ''
       }
     },
     watch: {
@@ -686,7 +713,6 @@
     position: relative;
     overflow: hidden;
   }
-
   .operating {
     position: fixed;
     z-index: 99;
@@ -702,13 +728,15 @@
     -khtml-user-select: none; /*早期浏览器*/
     user-select: none;
   }
-
   .info {
     position: fixed;
-    right: 0;
+    right: -100%;
     top: 0;
     z-index: 99;
     height: 100%;
+    /*overflow-x: auto;*/
+    /*overflow-y: hidden;*/
+    transition: right .3s ease-in-out;
     box-shadow: 1px 1px 4px 0 #0a0a0a2e;
     .title {
       height: 40px;
@@ -724,13 +752,20 @@
     }
     .content {
       background: rgba(247, 249, 251, 0.85);
-      width: 200px;
+      min-width: 160px;
       height: 800px;
       border-left: 1px solid #E6E9ED;
       padding: 10px;
     }
   }
-
+  .infoShow{
+    right: 0px;
+  }
+  .closeRight{
+    float: right;
+    cursor: pointer;
+    padding-right: 10px;
+  }
   .btn-group {
     border-right: 1px solid #efefef;
     display: inline-block;
