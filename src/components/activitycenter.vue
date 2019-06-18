@@ -697,7 +697,7 @@
   }
   .demo_content{
     background-size: 100% auto;
-    min-width: 1200px;
+    min-width: 1000px;
     position: relative;
   }
   .left_content{
