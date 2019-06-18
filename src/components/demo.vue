@@ -3,6 +3,7 @@
       <anchor :nodeTypeList="nodeTypeList" :actionList="actionList"
               :funcList="funcList" :accountList="accountList"  :workflowList="workflowList" v-on:jsonData="getJson">
       </anchor>
+
       <div style="position: fixed;bottom: 0;left: 0">
         <button @click="showData">父页面获取数据</button>
         <button @click="doIt">显示错误</button>

@@ -735,7 +735,7 @@
     z-index: 99;
     height: 100%;
     /*overflow-x: auto;*/
-    /*overflow-y: hidden;*/
+    overflow-y: auto;
     transition: right .3s ease-in-out;
     box-shadow: 1px 1px 4px 0 #0a0a0a2e;
     .title {
@@ -821,5 +821,11 @@
       font-size: 20px;
     }
 
+  }
+  ul{
+    list-style: none;
+  }
+  .el-scrollbar__wrap{
+    overflow-x: hidden;
   }
 </style>

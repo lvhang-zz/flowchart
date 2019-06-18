@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <router-view/>
+    <keep-alive>
+      <router-view/>
+    </keep-alive>
   </div>
 </template>
 
@@ -18,4 +20,11 @@ export default {
   .el-form-item{
     margin-bottom: 0;
   }
+  ul{
+    list-style: none;
+  }
+  .el-scrollbar__wrap{
+    overflow-x: hidden;
+  }
+
 </style>
