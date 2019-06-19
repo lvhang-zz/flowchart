@@ -20,6 +20,11 @@ export default new Router({
       path: '/cans2',
       name: 'cans2',
       component: ()=>import("../components/cans2.vue")
+    },
+    {
+      path: '/activitycentercopy',
+      name: 'activitycentercopy',
+      component: ()=>import("../components/activitycentercopy.vue")
     }
   ]
 })

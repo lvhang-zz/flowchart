@@ -8,7 +8,11 @@ import store from  "./vuex"
 
 import elementui from "element-ui"
 import 'element-ui/lib/theme-chalk/index.css';
-
+// router.beforeEach((to,from,next)=>{
+//   console.log(to);
+//   console.log(from);
+//   next()
+// });
 import iView from 'iview';
 import 'iview/dist/styles/iview.css';
 Vue.use(iView);

@@ -343,13 +343,14 @@
         } else {
           grid = null;
         }
+        let clientH = document.body.clientHeight;
         // 初始化画布
         self.net = new G6.Net({
           id: 'flowChart',      // 容器ID
           mode: 'edit',
           grid: grid,
           /*width: 500,    // 画布宽*/
-          height: 800 ,   // 画布高
+          height: clientH ,   // 画布高
         });
         //注册自定义节点
         G6.registNode('customNode', {
@@ -417,7 +418,6 @@
           self.net.update(item, {
             color: '#108EE9',
           });
-          // document.querySelectorAll("canvas")[1].style.cursor = "move";
           self.net.refresh();
         });
         self.net.on('itemmouseleave', ev => {
@@ -729,6 +729,7 @@
     border: 1px solid #ebeef5;
     position: relative;
     overflow: hidden;
+    height: 100vh;
   }
   .operating {
     position: fixed;
@@ -777,6 +778,7 @@
   }
   .infoShow{
     right: 0px;
+    background: rgba(247, 249, 251, 0.95);
   }
   .closeRight{
     float: right;
@@ -851,5 +853,6 @@
   .el-scrollbar__wrap{
     overflow-x: hidden;
   }
+
 
 </style>

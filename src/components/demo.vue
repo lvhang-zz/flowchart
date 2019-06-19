@@ -1,8 +1,8 @@
 <template>
     <div class="home">
-      <anchor :nodeTypeList="nodeTypeList" :actionList="actionList"
+      <canvastemplate :nodeTypeList="nodeTypeList" :actionList="actionList"
               :funcList="funcList" :accountList="accountList"  :workflowList="workflowList" v-on:jsonData="getJson">
-      </anchor>
+      </canvastemplate>
 
       <div style="position: fixed;bottom: 0;left: 0">
         <button @click="showData">父页面获取数据</button>
@@ -12,7 +12,7 @@
     </div>
 </template>
 <script>
-  import anchor from "./anchor"
+  import canvastemplate from "./canvastemplate"
   export default {
     data(){
       return{
@@ -49,7 +49,7 @@
       }
     },
     components:{
-      anchor
+      canvastemplate
     }
   }
 </script>

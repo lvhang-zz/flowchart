@@ -1,6 +1,6 @@
 <template>
   <div class="demo_content" @click.stop="closeAll" >
-    <div style="position: fixed;bottom: 0;right: 0;z-index: 9999">
+    <div style="position: fixed;top: 0;right: 0;z-index: 9999">
       <button @click="queryData">showJSON</button>
     </div>
     <div class="react_box" :class="react_box_classname" ref="react_box">
@@ -11,25 +11,20 @@
           <loading></loading>
         </div>
         <div  v-if="!loading">
-          <!--页面1-->
-          <div v-if="nowphoneId == 0"  class="left_content" @mouseover="showAll"  @mouseout="showAll">
+          <div class="left_content" :style="{background:'url('+parentItem.bgUrl +')',backgroundColor:'white'}"
+               v-for="(parentItem,parentIndex) in activityCenterData" v-if="currentPageId == parentItem.pageId" :key="parentIndex" >
             <div class="phone_title">
-              {{activityInfo.title}}
+              {{parentItem.title}}
             </div>
             <!--编辑背景-->
-            <div  @click.stop="" class="editBg" v-show="editBgShow">
+            <div  @click.stop="" class="editBg" v-if="parentItem.pageType == 'mainBody'">
               <span @click="tcBg=!tcBg">背景设置</span>
               <span>其他设置</span>
             </div>
-            <!--模拟手机页面的主体-->
-            <el-scrollbar style="height:100%">
+            <!--模拟手机页面的主体 主页面-->
+            <el-scrollbar style="height:100%"  v-if="parentItem.pageType == 'mainBody'">
               <!--图片 拖拽 与 伸缩-->
-              <div class="dragBox" v-for="(item,index) in demoData.banner" >
-                <!--:lock-aspect-ratio="true"   保持等比例缩放-->
-                <!--<vue-draggable-resizable  :lock-aspect-ratio="true"  @dragstop="dragstop"  @resizestop="resizestop" :w="divStyle.width" :h="divStyle.height" @dragging="onDrag" @resizing="onResize" :parent="true">-->
-                <!--<img  style="width: 100%;height: 100%" src="https://hdg.faisys.com/image/xydzp/title.png" alt="">-->
-                <!--<div v-show="isReductShow" @click="reduct" class="reduct"></div>-->
-                <!--</vue-draggable-resizable>-->
+              <div class="dragBox" v-for="(item,index) in parentItem.banner" >
                 <vue-drag-resize :aspectRatio="true" @dragging="dragging(index)" @resize="resize(index)"  @resizing="resizing(index)" @resizestop="resizestop" @dragstop="dragstop" :x="item.info.left"  :y="item.info.top"  :w="item.info.width" :h="item.info.height" :parentLimitation="true">
                   <img  style="width: 100%;height: 100%" :src="item.bgImage" alt="">
                   <div v-show="isReductShow" @click="reduct" class="reduct"></div>
@@ -52,7 +47,7 @@
                   <img src="https://hdg.faisys.com/image/xydzp/myAwardImg.png" alt="">
                 </div>
                 <div @dblclick="modal1 = true" class="textmiddle">
-                  <p :style="demoData.textMsg.prize.style" v-for="(item,index) in demoData.textMsg.prize.prizeText">{{item}}{{index}}</p>
+                  <p :style="parentItem.textMsg.prize.style" v-for="(item,index) in parentItem.textMsg.prize.prizeText">{{item}}{{index}}</p>
                 </div>
                 <div @click="modal1 = true" v-if="isshow" class="editStyle">
                   设置样式
@@ -66,7 +61,7 @@
                 <div class="activeRuleInfoBox">
                   <transition-group  name="flip-list" tag="div" enter-active-class="animated bounceInUp position"
                                      leave-active-class="animated bounceOutDown position">
-                    <div ref="top" class="top top1"  v-for="(item,index) in this.demoData.textMsg.activities.activity" :boxindex="index"  :key="item.name">
+                    <div ref="top" class="top top1"  v-for="(item,index) in parentItem.activities.activity" :boxindex="index"  :key="item.name">
                       <h1>{{item.name}}</h1>
                       <h2 v-show="!item.type">{{item.text}}</h2>
                       <h2 v-show="item.type">{{activityInfo.newTime}}</h2>
@@ -84,15 +79,10 @@
                 <Button  type="success">企业官网</Button>
               </div>
             </el-scrollbar>
-          </div>
-          <!--页面2-->
-          <div v-if="nowphoneId == 1" class="left_content left_content2">
-            <div class="phone_title">
-              {{activityInfo.title}}
-            </div>
-            <el-scrollbar style="height: 100%">
-              <ul class="tabcard1 tabcard_content1">
-                <li v-for="(item,index) in activityInfoList" @dblclick.stop="showShadow(item,index)" :key="index">
+            <!--普通的列表信息 输入框-->
+            <el-scrollbar style="height: 100%" v-if="parentItem.pageType != 'mainBody'">
+              <ul class="tabcard1 tabcard_content1" >
+                <li v-for="(item,index) in parentItem.activityInfoList" @dblclick.stop="showShadow(item,index)" :key="index">
                   <span>{{item.editName}}：</span>
                   <span>{{item.editInfo}}</span>
                   <span class="right_edit1" @click.stop="showShadow(item,index)">编辑</span>
@@ -100,23 +90,22 @@
               </ul>
             </el-scrollbar>
           </div>
-          <!--页面3-->
-          <div v-if="nowphoneId == 2" class="left_content left_content2">
-            <div>the three</div>
-          </div>
         </div>
         <div class="switch_page">
           <a class="pre" @click.stop="prePage"></a>
-          <div>{{nowphoneId + 1}} / {{phoneList.length}}</div>
+          <div>{{currentPageId + 1}} / {{activityCenterData.length}}</div>
           <a class="next" @click.stop="nextPage"></a>
         </div>
       </div>
       <!--右边边部分-->
       <div class="right_edit">
-        <el-scrollbar style="height: 100%">
+        <div v-for="(parentItem,parentIndex) in activityCenterData" :key="parentIndex">
+            {{parentItem.activities}}
+        </div>
+        <el-scrollbar style="height: 100%" v-if="0">
           <div class="right_edit_top">
-            <Tabs v-model="tabname" @on-click="tabChange">
-              <TabPane label="基础设置" name="基础设置">
+            <Tabs v-model="stringcurrentPageId">
+              <TabPane v-if="0" label="基础设置" name="基础设置">
                 <ul class="tabcard1">
                   <li>
                     活动标题：
@@ -128,7 +117,7 @@
                   </li>
                 </ul>
               </TabPane>
-              <TabPane label="活动设置" name="活动设置">
+              <TabPane  v-if="0" label="活动设置" name="活动设置">
                 <ul class="tabcard1 tabcard_list">
                   <li :class="showShdow == item.editName? 'showShadow':''" v-for="(item,index) in activityInfoList" :key="index">
                     <span>{{item.editName}}：</span>
@@ -158,6 +147,21 @@
                   </li>
                 </ul>
               </TabPane>
+              <TabPane v-for="(parentItem,parentIndex) in activityCenterDataCopy" :key="parentIndex"
+                       :label="parentItem.pageName" :name="parentItem.pageId + ''">
+                  <ul class="tabcard1" v-if="currentPageId == 0">
+                    {{parentItem.activities.activity}}
+                    <!--<li v-if="parentItem.activities"  v-for="(item,index) in parentItem.activities.activity" :key="index">-->
+                      <!--{{item.name}}-->
+                      <!--<input type="text" v-model="item.text">-->
+                    <!--</li>-->
+                    <li>
+                      活动标题：
+                      <input type="text" v-model="parentItem.title">
+                    </li>
+                  </ul>
+              </TabPane>
+
             </Tabs>
           </div>
         </el-scrollbar>
@@ -257,7 +261,7 @@
   });
   import VueDraggableResizable from 'vue-draggable-resizable'
   import loading from "../common/loading.vue"
-  import {getData} from "../api";
+  import {getData,getActivityCenterData} from "../api";
   export default {
     data(){
       return{
@@ -361,6 +365,11 @@
         leftSide:1,
         actDrapArr:null,//当前拖拽的元素所在的数组
         actDrapIndex:null,//当前拖拽的元素所在的数组的索引
+
+        activityCenterData:'',//整个页面的数据
+        activityCenterDataCopy:'',// 副本
+        currentPageId:0,//当前显示的页面的id
+        stringcurrentPageId:"",
       }
     },
     components:{
@@ -369,26 +378,33 @@
       VueDragResize,
     },
     beforeCreate(){
-      getData().then((res)=>{
-        console.log(res.data);
-        let data = res.data;
-        this.demoData = data;
-        sessionStorage.setItem("demoData",JSON.stringify(data));
-        this.actDrapArr = data.banner;
-        this.itemBox = data.textMsg.activities.activity;
-        this.$nextTick(()=>{
-          this.loading = false
-        })
-      })
+      // getData().then((res)=>{
+      //   let data = res.data;
+      //   this.demoData = data;
+      //   sessionStorage.setItem("demoData",JSON.stringify(data));
+      //   this.actDrapArr = data.banner;
+      //   this.itemBox = data.textMsg.activities.activity;
+      //   this.$nextTick(()=>{
+      //     this.loading = false
+      //   })
+      // })
     },
     created(){
-      // console.log("created。。。。。。");
-      if(sessionStorage.getItem('demoData')){
-        // console.log("缓存数据",JSON.parse(sessionStorage.getItem('demoData')));
-        let cachedata = JSON.parse(sessionStorage.getItem('demoData'))
-        // this.demoData = cachedata;
-      }
-      // console.log(this.$route);
+      let that = this;
+      // if(sessionStorage.getItem('demoData')){
+      //   // console.log("缓存数据",JSON.parse(sessionStorage.getItem('demoData')));
+      //   let cachedata = JSON.parse(sessionStorage.getItem('demoData'))
+      //   // this.demoData = cachedata;
+      // }
+      getActivityCenterData().then((res)=>{//获取整个页面的数据
+
+        that.activityCenterData = res.data;
+        that.activityCenterDataCopy = res.data;
+        that.stringcurrentPageId = this.currentPageId + "";
+
+        sessionStorage.setItem("activityCenterData",JSON.stringify(res.data));
+        this.loading = false;
+      })
     },
     computed:{
       boxLength(){//计算是否是最后一个
@@ -421,7 +437,8 @@
         get(){
           return Number(this.demoData.textMsg.prize.style.fontSize.split("px")[0])
         }
-      }
+      },
+
     },
     methods:{
       closeAll(){
@@ -508,7 +525,6 @@
       },
       //缩放中的事件
       resizing(index){
-
         this.actDrapIndex = index;
       },
       //缩放结束的事件
@@ -518,12 +534,12 @@
         this.demoData.banner = this.actDrapArr
       },
       prePage(){//上一页
-        let length = this.phoneList.length;
-        this.nowphoneId == 0?this.nowphoneId=(length-1):this.nowphoneId=this.nowphoneId-=1;
+        let length = this.activityCenterData.length;
+        this.currentPageId == 0?this.currentPageId=(length-1):this.currentPageId=this.currentPageId-=1;
       },
       nextPage(){//下一页
-        let length = this.phoneList.length  - 1;
-        this.nowphoneId == length?this.nowphoneId=0:this.nowphoneId=this.nowphoneId+=1;
+        let length = this.activityCenterData.length  - 1;
+        this.currentPageId == length?this.currentPageId=0:this.currentPageId=this.currentPageId+=1;
 
       },
       showShadow(item,index){
@@ -561,7 +577,7 @@
       locationSuccess(...data){//定位成功
         console.log(data);
       },
-      tabChange(data){//左边选项卡切换时的方法
+      changetab(...val){//左边选项卡切换时的方法
 
       },
       reTract(){//收起侧边栏
@@ -584,7 +600,7 @@
       },
       //打印修改后的数据
       queryData(){
-        console.log(this.demoData);
+        console.log(this.activityCenterData);
         // console.log(this);
       }
     },
@@ -633,7 +649,18 @@
           this.activityInfoList = activityInfoList;
         }
       },
+      stringcurrentPageId(val){
+        // console.log("31231");
+        // this.$forceUpdate();
+        this.currentPageId = Number(val);
+      },
+      currentPageId(val){
+        this.stringcurrentPageId = val + "";
+      },
     },
+    updated() {
+
+    }
 
   }
   //格式化时间
@@ -705,7 +732,6 @@
     height: 667px;
     padding-top: 64px;
     position: relative;
-    background: url("https://hdg.faisys.com/image/xydzp/homeBg.jpg") no-repeat top;
   }
   .left_wrap{
     width: 445px;
