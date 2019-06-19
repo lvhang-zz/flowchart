@@ -26,5 +26,8 @@ export default {
   .el-scrollbar__wrap{
     overflow-x: hidden;
   }
+  .isActivity .el-form-item .el-form-item__label{
+    text-align: center!important;
+  }
 
 </style>

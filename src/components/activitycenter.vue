@@ -1055,4 +1055,7 @@
   .el-scrollbar__wrap{
     overflow: scroll;
   }
+.el-form-item__label{
+    text-align: center;
+  }
 </style>

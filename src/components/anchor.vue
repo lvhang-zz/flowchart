@@ -55,8 +55,8 @@
     </div>
     <!--右侧功能页-->
     <div class="info" :class="activation == ''?'':'infoShow'">
-      <div class="title">
-        <span v-show="nodeType !== 3">{{infoTitle}}属性</span>
+      <div class="title"  v-show="nodeType !== 3">
+        <span >{{infoTitle}}属性</span>
         <span class="closeRight" @click="closeRight">关闭</span>
       </div>
       <div class="content">
@@ -122,13 +122,27 @@
             <el-color-picker v-model="color"></el-color-picker>
           </el-form-item>
         </el-form>
-        <!---->
-        <div v-if="isNode === true && isBlank != true && nodeType == 3" >
-          <el-form  label-position="left" label-width="60px">
+        <!--特殊节点 弹出模板-->
+        <div class="isActivity" v-if="isNode === true && isBlank != true && nodeType == 3" >
+          <el-form  label-position="left" label-width="60px" style="display: flex">
             <el-form-item  label="名称">
               <el-input ref="input1" size="mini" v-model="name"></el-input>
             </el-form-item>
+            <el-form-item label="形状">
+              <el-select v-model="activeShape" size="mini" filterable placeholder="请选择形状" value="">
+                <el-option
+                  v-for="item in nodeStyleArr"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="颜色">
+              <el-color-picker v-model="color"></el-color-picker>
+            </el-form-item>
           </el-form>
+          <span class="closeRight" @click="closeRight">关闭</span>
           <activitycenter></activitycenter>
         </div>
         <!--边 edge-->
@@ -162,11 +176,12 @@
             </el-form-item>
             <el-form-item label="方向"></el-form-item>
           </el-form>
+
         </div>
       </div>
     </div>
     <!--其他操作-->
-    <div style="position: fixed;right: 222px;top: 0;z-index: 9999">
+    <div style="position: fixed;right: 222px;bottom: 0;z-index: 9999">
       <button @click="showJson">showJson</button>
       <button @click="goNew">toNew</button>
       <button @click="tofitView">autosize</button>
@@ -663,6 +678,8 @@
         this.$store.commit("add")
       },
       closeRight(){
+        this.isBlank = true;
+        this.infoTitle = '画布';
         this.activation = ''
       }
     },
@@ -753,7 +770,7 @@
     .content {
       background: rgba(247, 249, 251, 0.85);
       min-width: 160px;
-      height: 800px;
+      min-height: 400px;
       border-left: 1px solid #E6E9ED;
       padding: 10px;
     }
@@ -765,6 +782,12 @@
     float: right;
     cursor: pointer;
     padding-right: 10px;
+  }
+  .isActivity .closeRight{
+    position: absolute;
+    right: 0;
+    top: 0;
+
   }
   .btn-group {
     border-right: 1px solid #efefef;
@@ -828,4 +851,5 @@
   .el-scrollbar__wrap{
     overflow-x: hidden;
   }
+
 </style>
