@@ -25,6 +25,11 @@ export default new Router({
       path: '/activitycentercopy',
       name: 'activitycentercopy',
       component: ()=>import("../components/activitycentercopy.vue")
+    },
+    {
+      path: '/test',
+      name: 'test',
+      component: ()=>import("../components/test.vue")
     }
   ]
 })

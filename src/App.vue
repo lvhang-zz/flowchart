@@ -29,5 +29,8 @@ export default {
   .isActivity .el-form-item .el-form-item__label{
     text-align: center!important;
   }
+  .right_edit .is-horizontal{
+    display: none;
+  }
 
 </style>

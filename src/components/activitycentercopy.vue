@@ -6,13 +6,13 @@
     <div class="react_box" :class="react_box_classname" ref="react_box">
       <!--左边部分-->
       <div class="left_wrap">
-        <!--loading页面-->
+        <!--loading页-->
         <div class="left_content left_content_loading" v-if="loading">
           <loading></loading>
         </div>
         <div  v-if="!loading">
           <div class="left_content" :style="{background:'url('+parentItem.bgUrl +')',backgroundColor:'white'}"
-               v-for="(parentItem,parentIndex) in activityCenterData" v-if="currentPageId == parentItem.pageId" :key="parentIndex" >
+               v-for="(parentItem,parentIndex) in activityCenterData" v-show="currentPageId == parentItem.pageId" :key="parentItem.title" >
             <div class="phone_title">
               {{parentItem.title}}
             </div>
@@ -25,50 +25,57 @@
             <el-scrollbar style="height:100%"  v-if="parentItem.pageType == 'mainBody'">
               <!--图片 拖拽 与 伸缩-->
               <div class="dragBox" v-for="(item,index) in parentItem.banner" >
-                <vue-drag-resize :aspectRatio="true" @dragging="dragging(index)" @resize="resize(index)"  @resizing="resizing(index)" @resizestop="resizestop" @dragstop="dragstop" :x="item.info.left"  :y="item.info.top"  :w="item.info.width" :h="item.info.height" :parentLimitation="true">
-                  <img  style="width: 100%;height: 100%" :src="item.bgImage" alt="">
-                  <div v-show="isReductShow" @click="reduct" class="reduct"></div>
+                <vue-drag-resize :aspectRatio="true" @dragging="dragging(item)" @resize="resize(index)"
+                                 @resizing="resizing(item)" @resizestop="resizestop" @dragstop="dragstop"
+                                 :x="item.info.left"  :y="item.info.top"  :w="item.info.width" :h="item.info.height"
+                                 :parentLimitation="true">
+                  <img  style="width: 100%;height: 100%" :src="item.image" alt="">
+                  <!--<div v-show="isReductShow" @click="reduct" class="reduct"></div>-->
+                  <span class="edit">编辑</span>
                 </vue-drag-resize>
               </div>
-              <div class="middle_msg" :style="middleMsgStyle.parent">
-                <vue-draggable-resizable v-show="middleMsgStyle.isJoinNumShow" :x="65" :w="middleMsgStyle.son.width"  :resizable="false"  :h="middleMsgStyle.son.height"  :parent="true">
+              <!--中间文字拖拽 修改颜色字体等-->
+              <div class="middle_msg" >
+                <vue-drag-resize v-for="(item,index) in parentItem.textMsg.luckDrawMsg"  :w="item.info.width" :h="item.info.height"
+                                 :x="item.info.left"  :y="item.info.top" :isResizable="false" :parentLimitation="true"
+                                 :key="item.text" @dragging.stop="dragging(item)" @dragstop="dragstop">
                   <p>
-                    已有 {{middleMsgStyle.num}} 人参与
+                    {{item.text1}} {{item.num}} {{item.text2}}
                   </p>
-                </vue-draggable-resizable>
-                <vue-draggable-resizable :x="65" :y="40"  :l="300" :w="middleMsgStyle.son.width"  :resizable="false"  :h="middleMsgStyle.son.height"  :parent="true">
-                  <p>
-                    您今天还有 {{middleMsgStyle.peopleNum}} 次抽奖机会
+                  <span class="edit" @click.stop="locationEle(item)">编辑</span>
+                </vue-drag-resize>
+              </div>
+              <!--带图片和文字-->
+              <div class="text_wrap">
+                <div class="title" @click.stop="setImage(parentItem.textMsg.prize)" >
+                  <img :src="parentItem.textMsg.prize.image" title="点击修改图片">
+                </div>
+                <div class="textmiddle"  @dbclick.stop="setFontStyle(parentItem.textMsg.prize)">
+                  <p :style="{fontSize:parentItem.textMsg.prize.style.fontSize + 'px',color:parentItem.textMsg.prize.style.color}"
+                     v-for="(item,index) in parentItem.textMsg.prize.text">
+                    {{item}}
                   </p>
-                </vue-draggable-resizable>
+                </div>
+                <span @click.stop="setFontStyle(parentItem.textMsg.prize)" class="editStyle">
+                  编辑样式
+                </span>
               </div>
-              <div class="text_wrap" @click="showEditm">
-                <div class="title" @click.stop="tcList.updateShow = !tcList.updateShow" >
-                  <img src="https://hdg.faisys.com/image/xydzp/myAwardImg.png" alt="">
-                </div>
-                <div @dblclick="modal1 = true" class="textmiddle">
-                  <p :style="parentItem.textMsg.prize.style" v-for="(item,index) in parentItem.textMsg.prize.prizeText">{{item}}{{index}}</p>
-                </div>
-                <div @click="modal1 = true" v-if="isshow" class="editStyle">
-                  设置样式
-                </div>
-              </div>
-              <!--上移 下移-->
+              <!--模拟滑块上移 下移-->
               <div class="demo_bottom">
-                <div class="title">
-                  <img src="https://hdg.faisys.com/image/xydzp/activeRuleImg.png" alt="">
+                <div class="title" @click.stop="setImage(parentItem.activities)" >
+                  <img :src="parentItem.activities.image" alt="">
                 </div>
                 <div class="activeRuleInfoBox">
                   <transition-group  name="flip-list" tag="div" enter-active-class="animated bounceInUp position"
                                      leave-active-class="animated bounceOutDown position">
-                    <div ref="top" class="top top1"  v-for="(item,index) in parentItem.activities.activity" :boxindex="index"  :key="item.name">
+                    <div ref="top" class="top top1"  v-for="(item,index) in parentItem.activities.activity" :key="item.name">
                       <h1>{{item.name}}</h1>
                       <h2 v-show="!item.type">{{item.text}}</h2>
                       <h2 v-show="item.type">{{activityInfo.newTime}}</h2>
                       <div class="edit_act">
-                        <span @click="moveUp(index)" v-if="index!=0">上移</span>
-                        <span @click="moveDown(index)" v-if="index!=boxLength">下移</span>
-                        <span>编辑</span>
+                        <span @click.stop="moveUp(parentItem.activities.activity,item,index)" v-if="index!=0">上移</span>
+                        <span @click.stop="moveDown(parentItem.activities.activity,item,index)" v-if="index!=boxLength">下移</span>
+                        <span @click.stop="locationEle(item)">编辑</span>
                       </div>
                     </div>
                   </transition-group>
@@ -97,29 +104,37 @@
           <a class="next" @click.stop="nextPage"></a>
         </div>
       </div>
-      <!--右边边部分-->
+      <!--右边部分-->
       <div class="right_edit">
-        <div v-for="(parentItem,parentIndex) in activityCenterData" :key="parentIndex">
-            {{parentItem.activities}}
-        </div>
-        <el-scrollbar style="height: 100%" v-if="0">
+        <el-scrollbar style="height: 100%">
           <div class="right_edit_top">
             <Tabs v-model="stringcurrentPageId">
-              <TabPane v-if="0" label="基础设置" name="基础设置">
-                <ul class="tabcard1">
+              <TabPane v-for="(parentItem,parentIndex) in activityCenterData" :key="parentIndex"
+                       :label="parentItem.pageName" :name="parentItem.pageId + ''">
+                <ul  v-if="parentItem.activities"  class="tabcard1 tabcard_tab">
                   <li>
-                    活动标题：
-                    <input type="text" v-model="activityInfo.title">
+                    <span>活动标题：</span>
+                    <div class="inputwrap">
+                      <Input type="text" v-model="parentItem.title"></Input>
+                    </div>
                   </li>
-                  <li style="z-index: 4000">
-                    活动时间:
-                    <DatePicker v-model="activityInfo.value2" format="yyyy/MM/dd" type="daterange" placement="top-start" placeholder="Select date" style="width: 200px"></DatePicker>
+                  <li  v-for="(item,index) in parentItem.activities.activity"  :class="{showShadow:currentEditEle.name == item.name}" :key="item.name">
+                    <span>{{item.name}}：</span>
+                    <div class="inputwrap" >
+                      <Input type="text" :type="item.textArea?'textarea':'text'"  v-model="item.text"></Input>
+                    </div>
+
+                  </li>
+                  <li :class="{showShadow:currentEditEle.name == item.name}" v-for="(item,index) in parentItem.textMsg.luckDrawMsg" :key="item.name">
+                    <span>{{item.name}}：</span>
+                    <div class="inputwrap">
+                      <Input type="number" v-model="item.num"  @on-change="inputNum(item)"></Input>
+                    </div>
                   </li>
                 </ul>
-              </TabPane>
-              <TabPane  v-if="0" label="活动设置" name="活动设置">
-                <ul class="tabcard1 tabcard_list">
-                  <li :class="showShdow == item.editName? 'showShadow':''" v-for="(item,index) in activityInfoList" :key="index">
+                <ul v-if="parentItem.activityInfoList" class="tabcard1 tabcard_list">
+                  <li :class="showShdow == item.editName? 'showShadow':''"
+                      v-for="(item,index) in parentItem.activityInfoList" :key="index">
                     <span>{{item.editName}}：</span>
                     <DatePicker v-if="item.editInfotime" v-model="item.editInfotime" format="yyyy/MM/dd" type="daterange" placement="top-start" style="width: 200px"></DatePicker>
                     <div class="tabcard1_d" v-if="item.usertime" >
@@ -147,21 +162,6 @@
                   </li>
                 </ul>
               </TabPane>
-              <TabPane v-for="(parentItem,parentIndex) in activityCenterDataCopy" :key="parentIndex"
-                       :label="parentItem.pageName" :name="parentItem.pageId + ''">
-                  <ul class="tabcard1" v-if="currentPageId == 0">
-                    {{parentItem.activities.activity}}
-                    <!--<li v-if="parentItem.activities"  v-for="(item,index) in parentItem.activities.activity" :key="index">-->
-                      <!--{{item.name}}-->
-                      <!--<input type="text" v-model="item.text">-->
-                    <!--</li>-->
-                    <li>
-                      活动标题：
-                      <input type="text" v-model="parentItem.title">
-                    </li>
-                  </ul>
-              </TabPane>
-
             </Tabs>
           </div>
         </el-scrollbar>
@@ -169,35 +169,40 @@
     </div>
     <!--弹窗 设置文字-->
     <Modal
-      v-model="modal1"
+      v-model="modallText"
       title="修改"
       @on-ok="ok"
-      @on-cancel="cancel" v-if="demoData">
-      <div class="slideWrap">
-        <span>字体大小</span>
-        <div>
-          <Slider v-model="font"></Slider>
+      @on-cancel="cancel">
+      <div  v-if="currentEditEle && modallText">
+        <div class="slideWrap">
+          <span>字体大小</span>
+          <div>
+            <Slider v-model="currentEditEle.style.fontSize"></Slider>
+          </div>
+          <span>{{currentEditEle.style.fontSize}}px</span>
         </div>
-        <span>{{font}}px</span>
+        <div>
+          <span>字体颜色</span>
+          <ColorPicker  v-model="currentEditEle.style.color"  size="small" />
+        </div>
       </div>
-      <div>
-        <span>字体颜色</span>
-        <ColorPicker  v-model="demoData.textMsg.prize.style.color"  size="small" />
-      </div>
+
     </Modal>
     <!--弹窗 上传图片-->
-    <Modal  v-model="tcList.updateShow"
+    <Modal  v-model="tc.modallImage"
             title="上传图片"
             @on-ok="ok"
             @on-cancel="cancel">
-      <div class="updateImgWrap">
-        <img src="https://hdg.faisys.com/image/xydzp/myAwardImg.png" alt="">
-      </div>
-      <div  class="updateImgWrap">
-        <Upload action="//jsonplaceholder.typicode.com/posts/"
-                :on-success="updateimgsuccess">
-          <Button icon="ios-cloud-upload-outline">上传替换</Button>
-        </Upload>
+      <div v-if="currentEditEle && tc.modallImage">
+        <div class="updateImgWrap">
+          <img :src="currentEditEle.image" alt="">
+        </div>
+        <div  class="updateImgWrap">
+          <Upload action="//jsonplaceholder.typicode.com/posts/"
+                  :on-success="updateimgsuccess">
+            <Button icon="ios-cloud-upload-outline">上传替换</Button>
+          </Upload>
+        </div>
       </div>
     </Modal>
     <!--弹出 地图-->
@@ -218,9 +223,6 @@
               <bm-local-search :keyword="keyword"  :auto-viewport="true" :style="{display:'none'}"></bm-local-search>
             </bm-auto-complete>
           </div>
-          <!--<bm-marker :position="{lng: mapInfo.center[0], lat: mapInfo.center[1]}" :dragging="true" >-->
-          <!--&lt;!&ndash;<bm-label content="我爱北京天安门" :labelStyle="{color: 'red', fontSize : '24px'}" :offset="{width: -35, height: 30}"/>&ndash;&gt;-->
-          <!--</bm-marker>-->
           <!--定位控件-->
           <bm-geolocation @locationSuccess="locationSuccess" anchor="BMAP_ANCHOR_BOTTOM_RIGHT" :showAddressBar="true" :autoLocation="true"></bm-geolocation>
         </baidu-map>
@@ -312,9 +314,7 @@
         modal1: false,//弹窗 设置文字
         isshow:false,
         isReductShow:false,
-        tcList:{
-          updateShow:false//弹窗 上传图片
-        },
+
         itemBox:[
           {
             name:"001",
@@ -367,9 +367,14 @@
         actDrapIndex:null,//当前拖拽的元素所在的数组的索引
 
         activityCenterData:'',//整个页面的数据
-        activityCenterDataCopy:'',// 副本
         currentPageId:0,//当前显示的页面的id
         stringcurrentPageId:"",
+        currentEditEle:'',//当前正在操作的元素
+        tc:{
+          modallImage:false,//弹窗 上传图片
+
+        },
+        modallText:false// 弹窗 修改文字样式
       }
     },
     components:{
@@ -397,11 +402,8 @@
       //   // this.demoData = cachedata;
       // }
       getActivityCenterData().then((res)=>{//获取整个页面的数据
-
         that.activityCenterData = res.data;
-        that.activityCenterDataCopy = res.data;
         that.stringcurrentPageId = this.currentPageId + "";
-
         sessionStorage.setItem("activityCenterData",JSON.stringify(res.data));
         this.loading = false;
       })
@@ -443,18 +445,10 @@
     methods:{
       closeAll(){
         this.showShdow = '';
-
+        this.currentEditEle = ''
       },
       showAll(){
         this.editBgShow = !this.editBgShow
-      },
-      //
-      showEditm(){
-        if(this.isshow){
-          this.isshow = false
-        }else {
-          this.isshow = true
-        }
       },
       ok (data) {
         this.$Message.info('Clicked ok');
@@ -462,29 +456,13 @@
       cancel (data) {
         this.$Message.info('Clicked cancel');
       },
-      moveUp(index1){
-        let itemBox = this.itemBox;
-        let nowItem = itemBox[index1];
-        let itemBoxNew = itemBox.filter((item,index)=>{
-          return index != index1;
-        });
-        itemBoxNew.splice(index1 -1, 0, nowItem);
-        this.itemBox = itemBoxNew;
-        this.demoData.textMsg.activities.activity = itemBoxNew
+      moveUp(data,item,index1){
+        data.splice(index1,1);//先删除掉当前元素 在当前元素的上一个元素之上 再把当前元素添加上  实现两个元素上下交换位置
+        data.splice(index1 -1, 0, item);//
       },
-      moveDown(index1){
-        console.log(index1);
-        let itemBox = this.itemBox;
-        let nowItem = itemBox[index1];
-        let itemBoxNew = itemBox.filter((item,index)=>{
-          return index != index1;
-        });
-        console.log(itemBoxNew);
-        itemBoxNew.splice(index1 +1, 0, nowItem);
-        console.log(itemBoxNew);
-        this.itemBox = itemBoxNew;
-        this.demoData.textMsg.activities.activity = itemBoxNew
-
+      moveDown(data,item,index1){
+        data.splice(index1,1);//先删除掉当前元素 在当前元素的下一个元素之上 再把当前元素添加上  实现两个元素上下交换位置
+        data.splice(index1 +1, 0, item);//
       },
       onResize: function (x, y, width, height) {
         this.divStyle.x = x;
@@ -512,26 +490,21 @@
         console.log("上传成功");
         console.log(pra);
       },
-      //正在拖拽的事件
-      dragging(index){
-        this.actDrapIndex = index;
+      //正在拖拽的事件 顶部图片
+      dragging(item){
+        this.currentEditEle = item;
       },
-      //拖拽结束的事件
+      //拖拽结束的事件 顶部图片
       dragstop(pra){
-        console.log("拖拽结束");
-        console.log(pra);
-        this.actDrapArr[this.actDrapIndex].info = pra;
-        this.demoData.banner = this.actDrapArr
+        this.currentEditEle.info = pra
       },
-      //缩放中的事件
-      resizing(index){
-        this.actDrapIndex = index;
+      //缩放中的事件 顶部图片
+      resizing(item){
+        this.currentEditEle = item;
       },
-      //缩放结束的事件
+      //缩放结束的事件 顶部图片
       resizestop(pra){
-        console.log("2222");
-        this.actDrapArr[this.actDrapIndex].info = pra;
-        this.demoData.banner = this.actDrapArr
+        this.currentEditEle.info = pra
       },
       prePage(){//上一页
         let length = this.activityCenterData.length;
@@ -598,6 +571,28 @@
       changePage(data){//侧边栏切换
         this.nowphoneId == (data.id - 1) ?"":this.nowphoneId = (data.id - 1)
       },
+      //修改输入数据
+      inputNum(val){
+        console.log(val);
+
+        if( val.num <1){
+          val.num = 1
+        }
+      },
+      //定位要编辑的元素
+      locationEle(item){
+        this.currentEditEle = item;
+      },
+      //弹窗  上传修改图片
+      setImage(ele){
+        this.tc.modallImage = true;
+        this.currentEditEle = ele
+      },
+      //弹窗 设置文字的样式
+      setFontStyle(ele){
+        this.modallText = true;
+        this.currentEditEle = ele;
+      },
       //打印修改后的数据
       queryData(){
         console.log(this.activityCenterData);
@@ -605,11 +600,6 @@
       }
     },
     watch:{
-      modal1(){
-        if(this.modal1){
-          this.isshow = false
-        }
-      },
       divStyle:{
         deep:true,
         handler(){
@@ -657,6 +647,13 @@
       currentPageId(val){
         this.stringcurrentPageId = val + "";
       },
+      activityCenterData:{
+        deep:true,
+        handler(val){
+          console.log("数据改变");
+        }
+
+      }
     },
     updated() {
 
@@ -741,7 +738,7 @@
     background-color:lightgray;
   }
   .right_edit_top{
-    position: absolute;
+    /*position: absolute;*/
     left: 0;
     top: 0;
     width: 100%;
@@ -752,6 +749,8 @@
     margin-bottom: 20px;
     width: 100%;
     height: 100px;
+    font-size: 14px;
+    color: #fff;
     .draggable{
       left: calc(50% - 115px);
     }
@@ -762,6 +761,22 @@
       line-height: 30px;
       cursor: move;
     }
+  }
+  .middle_msg .edit,.dragBox .edit{
+    position: absolute;
+    font-size: 12px;
+    color: #fff;
+    top: -28px;
+    padding: 10px 0;
+    right: 0;
+    cursor: pointer;
+    display: none;
+  }
+  .middle_msg .vdr:hover .edit,.dragBox .vdr:hover .edit{
+    display: block;
+  }
+  .middle_msg .vdr:hover {
+    border: 1px dashed #dedede;
   }
   .my-active-class .handle{
     width: 0px;
@@ -792,6 +807,7 @@
     cursor: pointer;
     left: 0;
     top: 0;
+    display: none;
   }
   .slideWrap{
     width: 300px;
@@ -864,6 +880,12 @@
         width: 100%;
       }
     }
+  }
+  .title{
+    cursor: pointer;
+  }
+  .text_wrap:hover .editStyle{
+    display: block;
   }
   .vdr{
     border: 1px solid transparent
@@ -1087,4 +1109,11 @@
   .ivu-tabs{
     overflow: inherit;
   }
+  .tabcard_tab li{
+    padding: 5px;
+  }
+  .tabcard_tab .inputwrap{
+    display: inline-block;
+  }
+
 </style>
