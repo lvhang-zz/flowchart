@@ -1,7 +1,9 @@
 <template>
   <div class="demo_content" @click.stop="closeAll" >
-    <div style="position: fixed;top: 0;right: 0;z-index: 9999">
+    <div style="position: fixed;top: 0;left: 0;z-index: 9999">
       <button @click="queryData">showJSON</button>
+      <button @click="queryData">clearCache</button>
+      <button @click.stop="locationElement">定位元素</button>
     </div>
     <div class="react_box" :class="react_box_classname" ref="react_box">
       <!--左边部分-->
@@ -35,10 +37,10 @@
                 </vue-drag-resize>
               </div>
               <!--中间文字拖拽 修改颜色字体等-->
-              <div class="middle_msg" >
+              <div class="middle_msg">
                 <vue-drag-resize v-for="(item,index) in parentItem.textMsg.luckDrawMsg"  :w="item.info.width" :h="item.info.height"
                                  :x="item.info.left"  :y="item.info.top" :isResizable="false" :parentLimitation="true"
-                                 :key="item.text" @dragging.stop="dragging(item)" @dragstop="dragstop">
+                                 :key="item.text" @dragging="dragging(item)" @dragstop="dragstop" >
                   <p>
                     {{item.text1}} {{item.num}} {{item.text2}}
                   </p>
@@ -70,11 +72,15 @@
                                      leave-active-class="animated bounceOutDown position">
                     <div ref="top" class="top top1"  v-for="(item,index) in parentItem.activities.activity" :key="item.name">
                       <h1>{{item.name}}</h1>
-                      <h2 v-show="!item.type">{{item.text}}</h2>
-                      <h2 v-show="item.type">{{activityInfo.newTime}}</h2>
+                      <h2 v-if="item.type !== 'setTime'">{{item.text}}</h2>
+                      <h2 v-if="item.type == 'setTime'">{{item.text[0]}} - {{item.text[1]}}</h2>
+                      <!--<h2 v-show="item.type">{{activityInfo.newTime}}</h2>-->
                       <div class="edit_act">
                         <span @click.stop="moveUp(parentItem.activities.activity,item,index)" v-if="index!=0">上移</span>
-                        <span @click.stop="moveDown(parentItem.activities.activity,item,index)" v-if="index!=boxLength">下移</span>
+                        <span @click.stop="moveDown(parentItem.activities.activity,item,index)"
+                              v-if="index!=parentItem.activities.activity.length - 1">
+                          下移
+                        </span>
                         <span @click.stop="locationEle(item)">编辑</span>
                       </div>
                     </div>
@@ -90,9 +96,12 @@
             <el-scrollbar style="height: 100%" v-if="parentItem.pageType != 'mainBody'">
               <ul class="tabcard1 tabcard_content1" >
                 <li v-for="(item,index) in parentItem.activityInfoList" @dblclick.stop="showShadow(item,index)" :key="index">
-                  <span>{{item.editName}}：</span>
-                  <span>{{item.editInfo}}</span>
-                  <span class="right_edit1" @click.stop="showShadow(item,index)">编辑</span>
+                  <span>{{item.name}}：</span>
+                  <span v-if="item.type != 'setTime'">{{item.text}}</span>
+                  <span v-if="item.type == 'setTime'">
+                    {{item.text[0]}} - {{item.text[1]}}
+                  </span>
+                  <span class="right_edit1" @click.stop="locationEle(item)">编辑</span>
                 </li>
               </ul>
             </el-scrollbar>
@@ -108,9 +117,11 @@
       <div class="right_edit">
         <el-scrollbar style="height: 100%">
           <div class="right_edit_top">
+            <!--右边tab选项卡-->
             <Tabs v-model="stringcurrentPageId">
               <TabPane v-for="(parentItem,parentIndex) in activityCenterData" :key="parentIndex"
                        :label="parentItem.pageName" :name="parentItem.pageId + ''">
+                <!--条件1-->
                 <ul  v-if="parentItem.activities"  class="tabcard1 tabcard_tab">
                   <li>
                     <span>活动标题：</span>
@@ -118,12 +129,17 @@
                       <Input type="text" v-model="parentItem.title"></Input>
                     </div>
                   </li>
-                  <li  v-for="(item,index) in parentItem.activities.activity"  :class="{showShadow:currentEditEle.name == item.name}" :key="item.name">
+                  <li  v-for="(item,index) in parentItem.activities.activity"
+                       :class="{showShadow:currentEditEle.name == item.name}" :key="index">
                     <span>{{item.name}}：</span>
-                    <div class="inputwrap" >
-                      <Input type="text" :type="item.textArea?'textarea':'text'"  v-model="item.text"></Input>
+                    <div class="inputwrap" v-if="item.type==='default'">
+                      <Input :type="item.textArea?'textarea':'text'"  v-model="item.text"></Input>
                     </div>
-
+                    <div class="inputwrap" v-if="item.type==='setTime'">
+                      <DatePicker :value="item.text" format="yyyy/MM/dd" type="daterange"
+                                  placement="top-start" @on-change="changeData" @on-open-change="changeDataEnd(item)" style="width: 170px">
+                      </DatePicker>
+                    </div>
                   </li>
                   <li :class="{showShadow:currentEditEle.name == item.name}" v-for="(item,index) in parentItem.textMsg.luckDrawMsg" :key="item.name">
                     <span>{{item.name}}：</span>
@@ -132,11 +148,16 @@
                     </div>
                   </li>
                 </ul>
+                <!--条件2-->
                 <ul v-if="parentItem.activityInfoList" class="tabcard1 tabcard_list">
-                  <li :class="showShdow == item.editName? 'showShadow':''"
+                  <li :class="currentEditEle.name == item.name? 'showShadow':''"
                       v-for="(item,index) in parentItem.activityInfoList" :key="index">
-                    <span>{{item.editName}}：</span>
-                    <DatePicker v-if="item.editInfotime" v-model="item.editInfotime" format="yyyy/MM/dd" type="daterange" placement="top-start" style="width: 200px"></DatePicker>
+                    <span>{{item.name}}：</span>
+                    <div @click.stop="" class="tabcard1_d" v-if="item.type == 'setTime'">
+                      <DatePicker :value="item.text" format="yyyy/MM/dd" type="daterange"
+                                   placement="top-start" @on-change="changeData" @on-open-change="changeDataEnd(item)" style="width: 200px">
+                      </DatePicker>
+                    </div>
                     <div class="tabcard1_d" v-if="item.usertime" >
                       <RadioGroup  v-model="item.usertime">
                         <Radio label="全部时段"></Radio>
@@ -146,16 +167,18 @@
                         <Checkbox v-for="(i,index) in  item.editInfoList" :label="i" :key="index"></Checkbox>
                       </CheckboxGroup>
                     </div>
-                    <div class="tabcard1_d" v-if="item.editName == '活动地点'">
+                    <div class="tabcard1_d" v-if="item.type == 'setSite'">
                       <RadioGroup  v-model="item.editLocationValue">
                         <Radio label="地图选址"></Radio>
-                        <a @click="mapInfo.isshow = !mapInfo.isshow" v-if="item.editLocationValue == '地图选址'">设置</a>
+                        <a @click.stop="showMap(item)" v-if="item.editLocationValue == '地图选址'">设置</a>
                         <Radio label="自定义"></Radio>
                       </RadioGroup>
-                      <input type="text" v-model="item.editInfo" v-if="item.editLocationValue == '自定义'">
+                      <div class="inputwrap">
+                        <Input type="text" v-model="item.text" v-if="item.editLocationValue == '自定义'"></Input>
+                      </div>
                     </div>
-                    <div class="tabcard1_d" v-if="item.editName == '选择礼品'">
-                      <Select v-model="item.editInfo" style="width:200px">
+                    <div class="tabcard1_d" v-if="item.type == 'setGoods'">
+                      <Select v-model="item.text" style="width:200px">
                         <Option  v-for="items in item.goodsList" :key="items"  :value="items" >{{ items }}</Option>
                       </Select>
                     </div>
@@ -167,7 +190,7 @@
         </el-scrollbar>
       </div>
     </div>
-    <!--弹窗 设置文字-->
+    <!--公共弹窗 设置文字-->
     <Modal
       v-model="modallText"
       title="修改"
@@ -188,8 +211,8 @@
       </div>
 
     </Modal>
-    <!--弹窗 上传图片-->
-    <Modal  v-model="tc.modallImage"
+    <!--公共弹窗 上传图片-->
+    <Modal v-model="tc.modallImage"
             title="上传图片"
             @on-ok="ok"
             @on-cancel="cancel">
@@ -206,28 +229,41 @@
       </div>
     </Modal>
     <!--弹出 地图-->
-    <Modal v-model="mapInfo.isshow" :title="mapInfo.title">
-      <div class="mapWrap">
+    <Modal width="800" v-model="tc.map"  @on-ok="ok"  @on-cancel="cancel">
+      <p slot="header" style="text-align:left">
+        <span>选择地点</span>
+        <span style="margin-left: 20px">
+          <span>当前:</span>
+          <span>{{currentEditTimeEle.text}}</span>
+        </span>
+      </p>
+      <div class="mapWrap" v-if="currentEditTimeEle.type == 'setSite'" @click.stop="">
         <baidu-map
-          @click="cMap" style="height: 400px;width: 100%" class="bm-view" :center="{lng: 116.404, lat: 39.915}"
-          :scroll-wheel-zoom="true" :zoom="13" :double-click-zoom="true"
-        >
-          <div class="mapSearch">
+          @click="cMap" :mapClick="false" style="height: 400px;width: 100%" class="bm-view" :center="{lng: 116.404, lat: 39.915}"
+          :scroll-wheel-zoom="true" :zoom="13" :double-click-zoom="true">
+          <div class="mapSearch" @click.stop="">
             <bm-view class="map"></bm-view>
-            <bm-auto-complete v-model="keyword" :sugStyle="{zIndex: 9999}" @highlight="highlight" @confirm="confirm" @searchcomplete="searchcomplete">
+            <bm-auto-complete  v-if="1" v-model="keyword" :sugStyle="{zIndex: 9999}"  @highlight="highlight" @confirm="confirm">
               <div class="map_input_wrap">
-                <span>当前选择：</span>
-                <input type="text" v-model="keyword" placeholder="请输入地名关键字">
+                <span>检索地点：</span>
+                <input type="text" autofocus="true" @blur="mapSearch=false" v-model="keyword" placeholder="请输入地名关键字">
                 <a @click="keyword=''">清空</a>
               </div>
               <bm-local-search :keyword="keyword"  :auto-viewport="true" :style="{display:'none'}"></bm-local-search>
             </bm-auto-complete>
+            <!--<div class="map_input_wrap" v-show="!mapSearch">-->
+              <!--<span>当前选择：</span>-->
+              <!--<input type="text" @focus="mapSearch=true" v-model="keyword" placeholder="请输入地名关键字">-->
+              <!--<a @click="keyword=''">清空</a>-->
+            <!--</div>-->
           </div>
+
           <!--定位控件-->
           <bm-geolocation @locationSuccess="locationSuccess" anchor="BMAP_ANCHOR_BOTTOM_RIGHT" :showAddressBar="true" :autoLocation="true"></bm-geolocation>
         </baidu-map>
 
       </div>
+
     </Modal>
     <!--弹出 设置背景-->
     <Modal
@@ -264,6 +300,7 @@
   import VueDraggableResizable from 'vue-draggable-resizable'
   import loading from "../common/loading.vue"
   import {getData,getActivityCenterData} from "../api";
+  import $ from 'jquery'
   export default {
     data(){
       return{
@@ -314,7 +351,6 @@
         modal1: false,//弹窗 设置文字
         isshow:false,
         isReductShow:false,
-
         itemBox:[
           {
             name:"001",
@@ -366,15 +402,19 @@
         actDrapArr:null,//当前拖拽的元素所在的数组
         actDrapIndex:null,//当前拖拽的元素所在的数组的索引
 
+
         activityCenterData:'',//整个页面的数据
         currentPageId:0,//当前显示的页面的id
         stringcurrentPageId:"",
-        currentEditEle:'',//当前正在操作的元素
+        currentEditEle:'',//当前要编辑的元素
+        currentEditDragEle:'',//当前正在拖拽和自定义缩放的元素
+        currentEditTimeEle:'',//当前正在改变日期的元素
         tc:{
           modallImage:false,//弹窗 上传图片
-
+          map:false // 地图弹窗
         },
-        modallText:false// 弹窗 修改文字样式
+        modallText:false,// 弹窗 修改文字样式
+        mapSearch:false,//是否开启地图搜索功能
       }
     },
     components:{
@@ -382,36 +422,33 @@
       VueDraggableResizable,
       VueDragResize,
     },
-    beforeCreate(){
-      // getData().then((res)=>{
-      //   let data = res.data;
-      //   this.demoData = data;
-      //   sessionStorage.setItem("demoData",JSON.stringify(data));
-      //   this.actDrapArr = data.banner;
-      //   this.itemBox = data.textMsg.activities.activity;
-      //   this.$nextTick(()=>{
-      //     this.loading = false
-      //   })
-      // })
-    },
     created(){
       let that = this;
-      // if(sessionStorage.getItem('demoData')){
-      //   // console.log("缓存数据",JSON.parse(sessionStorage.getItem('demoData')));
-      //   let cachedata = JSON.parse(sessionStorage.getItem('demoData'))
-      //   // this.demoData = cachedata;
-      // }
-      getActivityCenterData().then((res)=>{//获取整个页面的数据
-        that.activityCenterData = res.data;
+      let cacheData = JSON.parse(sessionStorage.getItem("activityCenterData"));
+      if(cacheData){
+        console.log("取缓存");
+        that.activityCenterData = cacheData;
         that.stringcurrentPageId = this.currentPageId + "";
-        sessionStorage.setItem("activityCenterData",JSON.stringify(res.data));
         this.loading = false;
-      })
+      }else {
+        //获取整个页面的数据
+        getActivityCenterData().then((res)=>{
+          that.activityCenterData = res.data;
+          that.stringcurrentPageId = this.currentPageId + "";
+          sessionStorage.setItem("activityCenterData",JSON.stringify(res.data));
+          this.loading = false;
+        })
+      }
+    },
+    mounted(){
+      let that = this;
+      //获取缓存
+      window.onbeforeunload = function (e) {
+        sessionStorage.setItem("activityCenterData",JSON.stringify(that.activityCenterData));
+        console.log("活动模板页面刷新");
+      }
     },
     computed:{
-      boxLength(){//计算是否是最后一个
-        return this.itemBox.length - 1
-      },
       leftSideText(){
         if(this.leftSide == "0"){
           return {
@@ -432,47 +469,42 @@
           return "react_box_float"
         }
       },
-      font:{
-        set(val){
-          this.demoData.textMsg.prize.style.fontSize = val + "px"
-        },
-        get(){
-          return Number(this.demoData.textMsg.prize.style.fontSize.split("px")[0])
-        }
-      },
 
     },
     methods:{
+      //格式化时间
+      formatTime(time){
+        if(time == ''){
+          return "2019-5-14"
+        }
+        let date =  new Date(time);
+        return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+      },
       closeAll(){
+        // console.log("点击空白区");
         this.showShdow = '';
         this.currentEditEle = ''
       },
       showAll(){
         this.editBgShow = !this.editBgShow
       },
+      //弹窗确定
       ok (data) {
         this.$Message.info('Clicked ok');
       },
+      //弹窗取消
       cancel (data) {
         this.$Message.info('Clicked cancel');
       },
+      //卡片上移效果
       moveUp(data,item,index1){
         data.splice(index1,1);//先删除掉当前元素 在当前元素的上一个元素之上 再把当前元素添加上  实现两个元素上下交换位置
         data.splice(index1 -1, 0, item);//
       },
+      //卡片下移效果
       moveDown(data,item,index1){
         data.splice(index1,1);//先删除掉当前元素 在当前元素的下一个元素之上 再把当前元素添加上  实现两个元素上下交换位置
         data.splice(index1 +1, 0, item);//
-      },
-      onResize: function (x, y, width, height) {
-        this.divStyle.x = x;
-        this.divStyle.y = y;
-        this.divStyle.width = width;
-        this.divStyle.height = height
-      },
-      onDrag: function (x, y) {
-        this.x = x;
-        this.y = y
       },
       reduct(){//还原图大小
         this.divStyle.width = this.oldMsg.width;
@@ -482,72 +514,39 @@
           _this.isReductShow = false
         })
       },
-      isShowJoinNum(data){
-        data.isshow == "隐藏" ? this.middleMsgStyle.isJoinNumShow = false:this.middleMsgStyle.isJoinNumShow = true
-        this.middleMsgStyle.num = Number(data.addNum);
-      },
       updateimgsuccess(...pra){
         console.log("上传成功");
         console.log(pra);
       },
       //正在拖拽的事件 顶部图片
       dragging(item){
-        this.currentEditEle = item;
+        this.currentEditDragEle = item;
       },
       //拖拽结束的事件 顶部图片
       dragstop(pra){
-        this.currentEditEle.info = pra
+        this.currentEditDragEle.info = pra
       },
       //缩放中的事件 顶部图片
       resizing(item){
-        this.currentEditEle = item;
+        this.currentEditDragEle = item;
       },
       //缩放结束的事件 顶部图片
       resizestop(pra){
-        this.currentEditEle.info = pra
+        this.currentEditDragEle.info = pra
       },
-      prePage(){//上一页
+      //上一页
+      prePage(){
         let length = this.activityCenterData.length;
         this.currentPageId == 0?this.currentPageId=(length-1):this.currentPageId=this.currentPageId-=1;
       },
-      nextPage(){//下一页
+      //下一页
+      nextPage(){
         let length = this.activityCenterData.length  - 1;
         this.currentPageId == length?this.currentPageId=0:this.currentPageId=this.currentPageId+=1;
 
       },
-      showShadow(item,index){
-        this.showShdow = item.editName;
-        this.tabname = item.parentName;
-      },
-      cMap(dot,...pra){
-        console.log(dot);
-        // console.log(dot.currentTarget.Xg);
-        console.log(dot.point);
-        let center = [];
-        center[0] = dot.point.lng;
-        center[1] = dot.point.lat;
-
-        this.mapInfo.center = center;
-      },
-      searchcomplete(data){
-        // console.log(data);
-      },
-      confirm(data){
-        console.log(this.keyword);
-        let activityInfoList = this.activityInfoList;
-        activityInfoList.forEach((item)=>{
-          if(item.editName == "活动地点"){
-            item.editInfo = this.keyword;
-          }
-          return item;
-        });
-        this.activityInfoList = activityInfoList;
-        console.log(activityInfoList);
-      },
-      highlight(data){
-        // console.log(data);
-      },
-      locationSuccess(...data){//定位成功
+      //定位成功
+      locationSuccess(...data){
         console.log(data);
       },
       changetab(...val){//左边选项卡切换时的方法
@@ -582,6 +581,33 @@
       //定位要编辑的元素
       locationEle(item){
         this.currentEditEle = item;
+        setTimeout(()=>{
+          this.locationElement(".right_edit",".el-scrollbar__wrap");
+        },100)
+      },
+      //滚动页面到定位的元素位置
+      locationElement(className1,className2){
+        let className = className1 + " " + className2;
+        let ele1 = $(className);
+        let scrollTopscrollTop = ele1.scrollTop();//被卷去的高度 被卷去的高度即滚动条滚动的距离
+        let currenteleHeight = ele1.height();//元素的高度
+        let currtEleTop = $(".showShadow");
+        // console.log("被卷去的高度即滚动条滚动的距离",scrollTopscrollTop);
+        // console.log("被卷去的高度 + 元素的高度=",scrollTopscrollTop + currenteleHeight);
+        // console.log("滚动元素的高度",scrolleleHeight);
+        if(currtEleTop.length > 0){
+          if(currtEleTop.offset().top < 0){
+            ele1.animate({
+              scrollTop:currtEleTop.offset().top + scrollTopscrollTop - 20
+            },"fast");//返回顶部
+          }else if(currtEleTop.offset().top < currenteleHeight){
+            return;
+          }else if(currtEleTop.offset().top > currenteleHeight){
+            ele1.animate({
+              scrollTop:currtEleTop.offset().top + scrollTopscrollTop
+            },"fast");//返回顶部
+          }
+        }
       },
       //弹窗  上传修改图片
       setImage(ele){
@@ -593,10 +619,49 @@
         this.modallText = true;
         this.currentEditEle = ele;
       },
+      //时间改变 刷新数据源
+      changeData(val,data){
+        this.currentEditTimeEle.text = val;
+      },
+      //
+      changeDataEnd(val){
+        this.currentEditTimeEle = val;
+      },
+      //地图弹出
+      showMap(data){
+        this.tc.map = true;
+        this.currentEditTimeEle = data;
+      },
+      //地图点击事件
+      cMap(dot){
+        // console.log(dot.currentTarget.Xg);
+        let geocoder= new BMap.Geocoder();//创建地址解析器的实例
+        geocoder.getLocation(dot.point,(res)=>{
+          // this.keyword = res.address;
+          this.currentEditTimeEle.text = res.address;
+          // this.add.site = rs.address;
+          //地址描述(string)=
+          // console.log(rs.address);    //这里打印可以看到里面的详细地址信息，可以根据需求选择想要的
+          // console.log(rs.addressComponents);//结构化的地址描述(object)
+          // console.log(rs.addressComponents.province); //省
+          // console.log(rs.addressComponents.city); //城市
+          // console.log(rs.addressComponents.district); //区县
+          // console.log(rs.addressComponents.street); //街道
+          // console.log(rs.addressComponents.streetNumber); //门牌号
+          // console.log(rs.surroundingPois); //附近的POI点(array)
+          // console.log(rs.business); //商圈字段，代表此点所属的商圈(string)
+        });
+      },
+      confirm(data){
+        this.currentEditTimeEle.text = this.keyword;
+      },
+      highlight(data){
+        // console.log(data);
+      },
       //打印修改后的数据
       queryData(){
-        console.log(this.activityCenterData);
-        // console.log(this);
+        // console.log(this.activityCenterData);
+        sessionStorage.setItem("activityCenterData",'')
       }
     },
     watch:{
@@ -639,6 +704,7 @@
           this.activityInfoList = activityInfoList;
         }
       },
+
       stringcurrentPageId(val){
         // console.log("31231");
         // this.$forceUpdate();
@@ -652,13 +718,11 @@
         handler(val){
           console.log("数据改变");
         }
-
       }
     },
-    updated() {
-
+    destroyed() {
+      console.log("组件销毁");
     }
-
   }
   //格式化时间
   function timeChange(time) {
@@ -1080,6 +1144,7 @@
     position: relative;
     color: #7d7d7d;
     border-bottom: 1px solid #eee;
+
   }
   .left_side ul .liActive{
     color: #2d8cf0;
@@ -1111,8 +1176,18 @@
   }
   .tabcard_tab li{
     padding: 5px;
+    /*margin-bottom: 150px;*/
+
   }
   .tabcard_tab .inputwrap{
+    display: inline-block;
+    font-size: 12px;
+    .ivu-input{
+      font-size: 12px;
+      background-color: firebrick;
+    }
+  }
+  .inputwrap{
     display: inline-block;
   }
 

@@ -1,4 +1,5 @@
 'use strict'
+const webpack = require('webpack')
 const path = require('path')
 const utils = require('./utils')
 const config = require('../config')
@@ -78,5 +79,13 @@ module.exports = {
     net: 'empty',
     tls: 'empty',
     child_process: 'empty'
-  }
+  },
+  plugins:[//jquery
+    new webpack.ProgressPlugin({
+      $:"jQuery",
+      jQuery:"jQuery",
+      jquery:"jQuery",
+      "window.jQuery":"jQuery",
+    })
+  ]
 }

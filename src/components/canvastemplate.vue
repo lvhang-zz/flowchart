@@ -122,7 +122,7 @@
             <el-color-picker v-model="color"></el-color-picker>
           </el-form-item>
         </el-form>
-        <!--特殊节点 弹出模板-->
+        <!--特殊节点 弹出模板编辑-->
         <div class="isActivity" v-if="isNode === true && isBlank != true && nodeType == 3" >
           <el-form  label-position="left" label-width="60px" style="display: flex">
             <el-form-item  label="名称">
@@ -143,7 +143,10 @@
             </el-form-item>
           </el-form>
           <span class="closeRight" @click="closeRight">关闭</span>
-          <activitycenter></activitycenter>
+          <!--加载自定义模板组件-->
+          <keep-alive>
+            <activitycenter></activitycenter>
+          </keep-alive>
         </div>
         <!--边 edge-->
         <div v-if="isNode !== true && isBlank != true" >
@@ -197,7 +200,7 @@
 </template>
 <script>
   import G6 from "@antv/g6";
-  import activitycenter from "../components/activitycenter.vue";
+  import activitycenter from "../components/activitycentercopy.vue";
   export default {
     name: "index",
     components: {
@@ -236,7 +239,7 @@
       window.onbeforeunload = function (e) {
         let currentdata = JSON.stringify(self.net.save().source);
         sessionStorage.setItem("currentdata",currentdata);
-        console.log("刷新");
+        console.log("流程图界面刷新");
       }
     },
     props: {

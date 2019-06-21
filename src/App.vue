@@ -33,4 +33,9 @@ export default {
     display: none;
   }
 
+  .tabcard_tab .inputwrap .ivu-input{
+    font-size: 12px;
+    /*background-color: firebrick;*/
+  }
+
 </style>
