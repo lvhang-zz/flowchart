@@ -370,17 +370,8 @@
           return "react_box_float"
         }
       },
-
     },
     methods:{
-      //格式化时间
-      formatTime(time){
-        if(time == ''){
-          return "2019-5-14"
-        }
-        let date =  new Date(time);
-        return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
-      },
       closeAll(){
         // console.log("点击空白区");
         this.currentEditEle = ''
@@ -565,35 +556,6 @@
       }
     },
     watch:{
-      activityInfo:{
-        deep:true,
-        handler(){
-          let time1 = timeChange(this.activityInfo.value2[0]);
-          let time2 = timeChange(this.activityInfo.value2[1]);
-          // console.log(time1);
-          this.activityInfo.newTime =  time1 + ' - ' + time2
-        }
-      },
-      activityInfoList:{
-        deep:true,
-        handler(item){
-          let activityInfoList = this.activityInfoList;
-          let time1 = timeChange(activityInfoList[0].editInfotime[0]);
-          let time2 = timeChange(activityInfoList[0].editInfotime[1]);
-          // console.log(time1);
-          activityInfoList[0].editInfo =  time1 + ' - ' + time2;
-          //
-          if(activityInfoList[1].usertime == "部分时段"){
-            activityInfoList[1].chooseMore = true
-          }else {
-            activityInfoList[1].chooseMore = false
-          }
-          if(activityInfoList[2].editLocationValue == "自定义"){
-
-          }
-          this.activityInfoList = activityInfoList;
-        }
-      },
       stringcurrentPageId(val){
         // console.log("31231");
         // this.$forceUpdate();
@@ -606,7 +568,7 @@
         deep:true,
         handler(val){
           sessionStorage.setItem("activityCenterData",JSON.stringify(val));
-          console.log("数据改变",val);
+          console.log("数据改变datachange",val);
         }
       }
     },

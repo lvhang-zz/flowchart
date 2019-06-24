@@ -206,6 +206,9 @@
     components: {
       activitycenter,
     },
+    beforeCreate(){
+
+    },
     created(){
 
     },
