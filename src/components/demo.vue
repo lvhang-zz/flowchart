@@ -15,22 +15,20 @@
     data(){
       return{
         actionList:[
-          {id: 11, label: 'yes'},
-          {id: 21, label: 'no'},
-
-          ],
+          {id: "yes", label: "yes"},
+          {id: "no", label: "no"},
+        ],
         funcList:[
-          {id: "d1", label: '吃饭'},
-          {id: "d2", label: '睡觉'},
+          {id: "d1", label: "吃饭"},
+          {id: "d2", label: "睡觉"},
         ],
         accountList:[],
         workflowList:[],
         nodeTypeList:	[
-          {id: 0, label: '普通节点'},
-          {id: 1, label: '入口节点'},
-          {id: 2, label: '出口节点'},
-          {id: 3, label: '活动模板编辑'},
-
+          {id: 0, label: "普通节点"},
+          {id: 1, label: "入口节点"},
+          {id: 2, label: "出口节点"},
+          {id: 3, label: "活动模板编辑"},
         ],
         data:''
       }

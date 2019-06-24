@@ -3,7 +3,6 @@
     <div style="position: fixed;top: 0;left: 0;z-index: 9999">
       <button @click="queryData">showJSON</button>
       <button @click="queryData">clearCache</button>
-      <button @click.stop="locationElement">定位元素</button>
     </div>
     <div class="react_box" :class="react_box_classname" ref="react_box">
       <!--左边部分-->
@@ -32,7 +31,6 @@
                                  :x="item.info.left"  :y="item.info.top"  :w="item.info.width" :h="item.info.height"
                                  :parentLimitation="true">
                   <img  style="width: 100%;height: 100%" :src="item.image" alt="">
-                  <!--<div v-show="isReductShow" @click="reduct" class="reduct"></div>-->
                   <span class="edit">编辑</span>
                 </vue-drag-resize>
               </div>
@@ -95,7 +93,7 @@
             <!--普通的列表信息 输入框-->
             <el-scrollbar style="height: 100%" v-if="parentItem.pageType != 'mainBody'">
               <ul class="tabcard1 tabcard_content1" >
-                <li v-for="(item,index) in parentItem.activityInfoList" @dblclick.stop="showShadow(item,index)" :key="index">
+                <li v-for="(item,index) in parentItem.activityInfoList" @dblclick.stop="locationEle(item)" :key="index">
                   <span>{{item.name}}：</span>
                   <span v-if="item.type != 'setTime'">{{item.text}}</span>
                   <span v-if="item.type == 'setTime'">
@@ -279,7 +277,7 @@
     <div style="display: none" ref="left_side" class="left_side" :class="leftSideText.className">
       <el-scrollbar style="height: 100%">
         <ul>
-          <li @click="changePage(item)" :class="item.id==(nowphoneId+1)?'liActive':''" v-for="(item,index) in phoneList" :key="index">{{item.name}}</li>
+          <!--<li @click="changePage(item)" :class="item.id==(nowphoneId+1)?'liActive':''" v-for="(item,index) in phoneList" :key="index">{{item.name}}</li>-->
         </ul>
       </el-scrollbar>
       <a @click="reTract">
@@ -304,105 +302,13 @@
   export default {
     data(){
       return{
-        b:"",
-        demoData:"",
-        lock:true,//防止按钮反复被点击
-        keyword: '',
+        isReductShow:false,
+        leftSide:1,
         editBgShow:false,//设置背景的按钮是否显示
         tcBg:false,//设置背景的弹窗
         loading:true,//loading页面的显示与隐藏
-        activityInfo:{
-          title:"参与活动赢大奖",
-          value2: ['2019-05-14', '2019-05-18'],
-          newTime:'2019-05-14 - 2019-05-18',
-          place:"江苏省苏州市相城区",
-          timeinterval:"周一至周日"
-        },
-        activityInfoList:[
-          {
-            editName:"有效日期",
-            editInfotime:["2019-05-14","2019-05-18"],
-            editInfo: '2019-05-14 - 2019-05-18',
-            parentName:"活动设置"
-          },
-          {
-            editName:"可用时段",
-            editInfo: "周一至周日",
-            usertime:"全部时段",
-            chooseMore:false,
-            editInfoList:["周一","周二","周三","周四","周五","周六","周日"],
-            editInfoListCheck:["周一","周二","周三","周四","周五","周六","周日"],
-            parentName:"活动设置"
-          },
-          {
-            editName:"活动地点",
-            editInfo: "江苏省苏州市相城区",
-            editLocationValue:'自定义',
-            parentName:"活动设置"
-          },
-          {
-            editName:"选择礼品",
-            editInfo: "腾讯vip黄金会员一月",
-            parentName:"活动设置",
-            goodsList:["腾讯vip黄金会员一月","爱奇艺vip黄金会员一月","优酷vip黄金会员一月"],
-
-          }
-        ],
-        modal1: false,//弹窗 设置文字
-        isshow:false,
-        isReductShow:false,
-        itemBox:[
-          {
-            name:"001",
-            text:"我是第一个"
-          },
-          {
-            name:"活动时间",
-            type:true,
-            text:"2019-5-15 - 2019-5-22 "
-          },
-          {
-            name:"003",
-            text:"我是第三个"
-          },
-          {
-            name:"004",
-            text:"我是第4个"
-          }
-        ],
-        oldMsg:{
-          width: 344,
-          height: 136,
-        },
-        middleMsgStyle:{
-          isJoinNumShow:true,//参与人数是否显示
-          num:0,
-          peopleNum:3,
-          parent:{
-            color:"#FFF",
-            fontSize:"15px"
-          },
-          son:{
-            height:30,
-            width:220,
-            lineHeight:30
-          }
-        },
-        phoneList:[{name:"首页",id:1},{name:"页面002",id:2},{name:"页面003",id:3}],
-        nowphoneId:0,
-        showShdow:'',
-        mapInfo:{
-          isshow:false,
-          zoom: 12,
-          center: [116.404, 39.915],
-          title:"地图选址"
-        },
-        tabname:"基础设置",
-        leftSide:1,
-        actDrapArr:null,//当前拖拽的元素所在的数组
-        actDrapIndex:null,//当前拖拽的元素所在的数组的索引
-
-
+        keyword: '',
+        lock:true,//防止按钮反复被点击
         activityCenterData:'',//整个页面的数据
         currentPageId:0,//当前显示的页面的id
         stringcurrentPageId:"",
@@ -441,12 +347,7 @@
       }
     },
     mounted(){
-      let that = this;
-      //获取缓存
-      // window.onbeforeunload = function (e) {
-      //   sessionStorage.setItem("activityCenterData",JSON.stringify(that.activityCenterData));
-      //   console.log("活动模板页面刷新");
-      // }
+
     },
     computed:{
       leftSideText(){
@@ -482,7 +383,6 @@
       },
       closeAll(){
         // console.log("点击空白区");
-        this.showShdow = '';
         this.currentEditEle = ''
       },
       showAll(){
@@ -660,21 +560,11 @@
       },
       //打印修改后的数据
       queryData(){
-        // console.log(this.activityCenterData);
-        sessionStorage.setItem("activityCenterData",'')
+        console.log(this.activityCenterData);
+        // sessionStorage.setItem("activityCenterData",'')
       }
     },
     watch:{
-      divStyle:{
-        deep:true,
-        handler(){
-          if(this.width != this.oldMsg.width || this.height != this.oldMsg.height){
-            this.isReductShow = true
-          }else {
-            this.isReductShow = false
-          }
-        }
-      },
       activityInfo:{
         deep:true,
         handler(){
@@ -1037,7 +927,7 @@
   .editBg{
     position: absolute;
     right: 0;
-    top: 40px;
+    top: 38px;
     width: 136px;
     z-index: 1000;
     height: 26px;
@@ -1048,7 +938,12 @@
     text-align: center;
     justify-content: space-around;
     cursor: pointer;
-
+  }
+  .editBg{
+    display: none;
+  }
+  .left_content:hover .editBg{
+    display: flex;
   }
   .updateImgWrap{
     display: inline-block;
