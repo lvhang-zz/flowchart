@@ -443,10 +443,10 @@
     mounted(){
       let that = this;
       //获取缓存
-      window.onbeforeunload = function (e) {
-        sessionStorage.setItem("activityCenterData",JSON.stringify(that.activityCenterData));
-        console.log("活动模板页面刷新");
-      }
+      // window.onbeforeunload = function (e) {
+      //   sessionStorage.setItem("activityCenterData",JSON.stringify(that.activityCenterData));
+      //   console.log("活动模板页面刷新");
+      // }
     },
     computed:{
       leftSideText(){
@@ -704,7 +704,6 @@
           this.activityInfoList = activityInfoList;
         }
       },
-
       stringcurrentPageId(val){
         // console.log("31231");
         // this.$forceUpdate();
@@ -716,7 +715,8 @@
       activityCenterData:{
         deep:true,
         handler(val){
-          console.log("数据改变");
+          sessionStorage.setItem("activityCenterData",JSON.stringify(val));
+          console.log("数据改变",val);
         }
       }
     },
