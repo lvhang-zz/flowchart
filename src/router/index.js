@@ -9,7 +9,10 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: ()=>import("../components/demo.vue")
+      component: ()=>import("../components/demo.vue"),
+      beforeEnter:(to,from,next)=>{
+        next()
+      }
     },
     {
       path: '/demo',
@@ -24,7 +27,10 @@ export default new Router({
     {
       path: '/activitycentercopy',
       name: 'activitycentercopy',
-      component: ()=>import("../components/activitycentercopy.vue")
+      component: ()=>import("../components/activitycentercopy.vue"),
+      beforeEnter(to,from,next){
+        next();
+      }
     },
     {
       path: '/test',

@@ -189,7 +189,8 @@
       <button @click="goNew">toNew</button>
       <button @click="tofitView">autosize</button>
       <button @click="addTest">addNum</button>
-      <span>{{$store.state.num}}</span>
+      <span>{{$store.state.number.num}}</span>
+      <span>{{$store.getters.num}}</span>
     </div>
     <div class="d_fixed" ref="d_fixed">
       <div class="btn"  @mouseup="addRhombusUp"  title="条件节点">
@@ -681,7 +682,7 @@
         this.net.resetZoom();
       },
       addTest(){
-        this.$store.commit("add")
+        this.$store.dispatch("add",1)
       },
       closeRight(){
         this.isBlank = true;
@@ -726,7 +727,8 @@
         this.net.read(_saveData);
         this.net.render()
       }
-    }
+    },
+
   }
 </script>
 

@@ -1,8 +1,10 @@
 <template>
     <div id="flowChart">
       <div>this is second page</div>
-      <h2>{{$store.state.num}}</h2>
-
+      <h2>{{$store.state.number.num}}</h2>
+      <div>
+        <button @click="minus">减</button>
+      </div>
     </div>
 </template>
 
@@ -17,7 +19,6 @@
       }
     },
     created(){
-      console.log(this.$route.params);
       this.nodes = this.$route.params.nodes;
       this.edges = this.$route.params.edges;
     },
@@ -37,6 +38,9 @@
           height: 800    // 画布高
         });
         self.net.changeData(nodes, edges)
+      },
+      minus(){
+        this.$store.dispatch("minus",2)
       }
     }
   }

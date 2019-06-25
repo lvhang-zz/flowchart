@@ -4,7 +4,7 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 import "babel-polyfill"//兼容ie
-import store from  "./vuex"
+import store from "./store"
 
 import elementui from "element-ui"
 import 'element-ui/lib/theme-chalk/index.css';
