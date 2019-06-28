@@ -237,7 +237,7 @@
       </p>
       <div class="mapWrap" v-if="currentEditTimeEle.type == 'setSite'" @click.stop="">
         <baidu-map
-          @click="cMap" :mapClick="false" style="height: 400px;width: 100%" class="bm-view" :center="{lng: 116.404, lat: 39.915}"
+          @click="cMap" :mapClick="false" style="height: 400px;width: 100%" class="bm-view" center="苏州"
           :scroll-wheel-zoom="true" :zoom="13" :double-click-zoom="true">
           <div class="mapSearch" @click.stop="">
             <bm-view class="map"></bm-view>
@@ -249,13 +249,9 @@
               </div>
               <bm-local-search :keyword="keyword"  :auto-viewport="true" :style="{display:'none'}"></bm-local-search>
             </bm-auto-complete>
-            <!--<div class="map_input_wrap" v-show="!mapSearch">-->
-              <!--<span>当前选择：</span>-->
-              <!--<input type="text" @focus="mapSearch=true" v-model="keyword" placeholder="请输入地名关键字">-->
-              <!--<a @click="keyword=''">清空</a>-->
-            <!--</div>-->
           </div>
-
+          <bm-marker :position="{lng: lng, lat: lat}" :dragging="false" >
+          </bm-marker>
           <!--定位控件-->
           <bm-geolocation @locationSuccess="locationSuccess" anchor="BMAP_ANCHOR_BOTTOM_RIGHT" :showAddressBar="true" :autoLocation="true"></bm-geolocation>
         </baidu-map>
@@ -297,7 +293,7 @@
   });
   import VueDraggableResizable from 'vue-draggable-resizable'
   import loading from "../common/loading.vue"
-  import {getData,getActivityCenterData} from "../api";
+  import {getActivityCenterData} from "../api";
   import $ from 'jquery'
   export default {
     data(){
@@ -321,6 +317,8 @@
         },
         modallText:false,// 弹窗 修改文字样式
         mapSearch:false,//是否开启地图搜索功能
+        lat:'',
+        lng:''
       }
     },
     components:{
@@ -449,7 +447,7 @@
           this.lock = false;
           setTimeout(function () {
             _this.lock = true;
-          },300)
+          },300);
           this.leftSide == "0"?this.leftSide = 1:this.leftSide = 0
         }else {
           setTimeout(function () {
@@ -525,8 +523,10 @@
       },
       //地图点击事件
       cMap(dot){
-        // console.log(dot.currentTarget.Xg);
-        let geocoder= new BMap.Geocoder();//创建地址解析器的实例
+        this.lat = dot.point.lat;
+        this.lng = dot.point.lng;
+        // //把标注添加到地图上
+        let geocoder= new BMap .Geocoder();//创建地址解析器的实例
         geocoder.getLocation(dot.point,(res)=>{
           // this.keyword = res.address;
           this.currentEditTimeEle.text = res.address;
@@ -762,7 +762,7 @@
     position: relative;
     border: 1px solid #ffffff;
     color: #fff;
-    transition: all .5s ease-in-out;
+    transition: all .5s ease-out;
   }
   .edit_act{
     display: none;
@@ -1047,5 +1047,14 @@
   .inputwrap{
     display: inline-block;
   }
+  .left_edit{
+    position: absolute;
+    left: 0;
+
+  }
+  .canvasBox{
+    position: relative;
+  }
+
 
 </style>

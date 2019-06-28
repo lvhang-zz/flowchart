@@ -23,7 +23,10 @@ export default {
   ul{
     list-style: none;
   }
-  .el-scrollbar__wrap{
+  .demo_content .el-scrollbar__wrap{
+    overflow: scroll;
+  }
+  .right_edit .el-scrollbar__wrap,.left_content .el-scrollbar__wrap{
     overflow-x: hidden;
   }
   .isActivity .el-form-item .el-form-item__label{

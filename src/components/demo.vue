@@ -1,11 +1,10 @@
 <template>
     <div class="home">
-      <canvastemplate :nodeTypeList="nodeTypeList" :actionList="actionList"
+      <canvastemplate ref="canvastemplate" :nodeTypeList="nodeTypeList" :actionList="actionList"
               :funcList="funcList" :accountList="accountList"  :workflowList="workflowList" v-on:jsonData="getJson">
       </canvastemplate>
       <div style="position: fixed;bottom: 0;left: 0">
         <button @click="showData">父页面获取数据</button>
-        <button @click="doIt">显示错误</button>
       </div>
     </div>
 </template>
@@ -34,14 +33,12 @@
       }
     },
     methods:{
-      doIt(){
-        return x;
-      },
       getJson(data){
         this.data = data;
+        console.log(this.data );
       },
       showData(){
-        console.log(this.data);
+        this.$refs.canvastemplate.showJson();//调用子组件 方法
       }
     },
     components:{

@@ -53,7 +53,7 @@
       <!--<el-input size="mini" v-model="workflowName" placeholder="请输入流图名称..."></el-input>-->
       <!--</div>-->
     </div>
-    <!--右侧功能页-->
+    <!--右侧设置页-->
     <div class="info" :class="activation == ''?'':'infoShow'">
       <div class="title"  v-show="nodeType !== 3">
         <span >{{infoTitle}}属性</span>
@@ -118,6 +118,13 @@
               </el-option>
             </el-select>
           </el-form-item>
+          <el-form-item label="单选" >
+            <RadioGroup v-model="radio">
+              <Radio :label="item.label" v-for="(item,index) in radioList.radiosArr" :key="index">
+                <span>{{item.label}}</span>
+              </Radio>
+            </RadioGroup>
+          </el-form-item>
           <el-form-item label="颜色">
             <el-color-picker v-model="color"></el-color-picker>
           </el-form-item>
@@ -145,7 +152,7 @@
           <span class="closeRight" @click="closeRight">关闭</span>
           <!--加载自定义模板组件-->
           <keep-alive>
-            <activitycenter></activitycenter>
+            <activitycenter ref="activitycenter"></activitycenter>
           </keep-alive>
         </div>
         <!--边 edge-->
@@ -177,7 +184,9 @@
                 </el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="方向"></el-form-item>
+            <el-form-item label="方向">
+              <Button @click.stop="changeDir" type="default">颠倒方向</Button>
+            </el-form-item>
           </el-form>
 
         </div>
@@ -188,9 +197,9 @@
       <button @click="showJson">showJson</button>
       <button @click="goNew">toNew</button>
       <button @click="tofitView">autosize</button>
-      <button @click="addTest">addNum</button>
-      <span>{{$store.state.number.num}}</span>
-      <span>{{$store.getters.num}}</span>
+      <!--<button @click="addTest">addNum</button>-->
+      <!--<span>{{$store.state.number.num}}</span>-->
+      <!--<span>{{$store.getters.num}}</span>-->
     </div>
     <div class="d_fixed" ref="d_fixed">
       <div class="btn"  @mouseup="addRhombusUp"  title="条件节点">
@@ -212,39 +221,6 @@
     },
     created(){
 
-    },
-    mounted() {
-      let self = this;
-      this.initG6();
-      //添加键盘事件
-      let _self = this;
-      document.onkeydown = function(e){
-        let key = window.event.keyCode;
-        if(key === 46){//删除键
-          self.del();
-        }
-        if(key === 18){//alt键拖拽
-          _self.changeMode('drag');
-        }
-        if(key === 17){//alt键拖拽
-          _self.changeMode('drag');
-        }
-      };
-      document.onkeyup = function(e){
-        let key = window.event.keyCode;
-        if(key === 18){
-          _self.changeMode('edit');
-        }
-        if(key === 17){
-          _self.changeMode('edit');
-        }
-      }
-      //浏览器的刷新事件
-      window.onbeforeunload = function (e) {
-        let currentdata = JSON.stringify(self.net.save().source);
-        sessionStorage.setItem("currentdata",currentdata);
-        console.log("流程图界面刷新");
-      }
     },
     props: {
       actionList: {
@@ -268,6 +244,16 @@
             {id: 3, label: '活动模板编辑'},
           ]
         }
+      },
+      radioList:{
+        type: Object, default: () => {
+          return {
+            radioVal:"选中1",
+            radiosArr:[
+              {id: 0, label: '选中1'},
+              {id: 1, label: '选中2'},
+          ]}
+        }
       }
     },
     data() {
@@ -278,6 +264,7 @@
         detailMsg:"",//当前节点的详细信息
         account: '',
         workflow: '',
+        radio:'',
         nodeType: 0,
         color: '',
         net: '',
@@ -335,6 +322,43 @@
           1,2,3,4,6,8
         ],
         lineWidth:'',//当前line的宽度
+      }
+    },
+    mounted() {
+      let self = this;
+      this.initG6();
+      //添加键盘事件
+      this.activeType = "edit";
+      document.onkeydown = function(e){
+        let key = window.event.keyCode;
+        if(key === 46){//删除键
+          self.del();
+        }
+        if(key === 17){//ctrl键拖拽
+          self.changeMode('drag');
+        }
+        if(key === 32){//
+          if(self.activeType == "edit"){
+            self.activeType = "drag"
+          }else {
+            self.activeType = "edit"
+          }
+        }
+      };
+      document.onkeyup = function(e){
+        let key = window.event.keyCode;
+        if(key === 18){
+          self.changeMode('edit');
+        }
+        if(key === 17){
+          self.changeMode('edit');
+        }
+      };
+      //浏览器的刷新事件
+      window.onbeforeunload = function (e) {
+        let currentdata = JSON.stringify(self.net.save().source);
+        sessionStorage.setItem("currentdata",currentdata);
+        console.log("流程图界面刷新");
       }
     },
     methods: {
@@ -409,6 +433,7 @@
             self.workflow = ev.item.get('model').workflow;
             self.nodeType = ev.item.get('model').nodeType;
             self.activeShape = ev.item.get('model').shape;
+            self.radio = ev.item.get('model').radio;
           } else {
             self.infoTitle = '边';
             self.action = ev.item.get('model').action;
@@ -432,18 +457,22 @@
           self.net.update(item, {
             color: self.oldColor
           });
-          document.querySelectorAll("canvas")[1].style.cursor = "default";
+          if(this.activeType == "edit"){
+            document.querySelectorAll("canvas")[1].style.cursor = "default";
+          }
           self.net.refresh();
         });
         //鼠标移动事件
         self.net.on("itemhover",e => {
-          //移动 到四个角改变鼠标的样式
-          if(e.frontEvObj.itemType == "node"){//移动到锚点和 四个角的位置
-            document.querySelectorAll("canvas")[1].style.cursor = "pointer";
-          }else if(e.itemType == "edge"){
-            document.querySelectorAll("canvas")[1].style.cursor = "pointer";
-          } else {
-            document.querySelectorAll("canvas")[1].style.cursor = "move";
+          if(this.activeType == "edit"){
+            //移动 到四个角改变鼠标的样式
+            if(e.frontEvObj.itemType == "node"){//移动到锚点和 四个角的位置
+              document.querySelectorAll("canvas")[1].style.cursor = "pointer";
+            }else if(e.itemType == "edge"){
+              document.querySelectorAll("canvas")[1].style.cursor = "pointer";
+            } else {
+              document.querySelectorAll("canvas")[1].style.cursor = "move";
+            }
           }
         });
         //鼠标左键抬起事件
@@ -613,7 +642,8 @@
             fill: this.color,
             shape: this.activeShape,
             detailMsg:this.detailMsg,
-            style:style
+            style:style,
+            radio:this.radio,
           });
         } else {
           /* 根据ID取出label*/
@@ -622,6 +652,7 @@
           //     return item.label
           //   }
           // }).join('');
+          // console.log(this.activation.get("model"));//获取节点详情
           this.net.update(this.activation, {
             label: this.name,
             color: this.color,
@@ -630,6 +661,15 @@
             size:this.lineWidth // 线的粗细
           });
         }
+      },
+      //箭头方向 互换
+      changeDir(){
+        let source = this.activation.get("model").source;
+        let target = this.activation.get("model").target;
+        this.net.update(this.activation, {
+          source:target,
+          target:source
+        });
       },
       //清空视图
       clearView() {
@@ -713,6 +753,9 @@
       color: function () {
         this.update()
       },
+      radio: function () {
+        this.update()
+      },
       lineWidth(){
         this.update()
       },
@@ -728,7 +771,6 @@
         this.net.render()
       }
     },
-
   }
 </script>
 
@@ -762,7 +804,7 @@
     height: 100%;
     /*overflow-x: auto;*/
     overflow-y: auto;
-    transition: right .3s ease-in-out;
+    transition: right .6s ease-in-out;
     box-shadow: 1px 1px 4px 0 #0a0a0a2e;
     .title {
       height: 40px;
@@ -807,6 +849,7 @@
     &:last-of-type {
       border-right: 0;
     }
+
     .btn {
       display: inline-block;
       margin: 2px;
@@ -816,6 +859,15 @@
       text-align: center;
       cursor: pointer;
       border: 1px solid rgba(233, 233, 233, 0);
+      position: relative;
+      span{
+        position: absolute;
+        display: block;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+      }
       i {
         font-size: 20px;
       }
@@ -835,6 +887,7 @@
     .el-form-item {
       margin-bottom: 0 !important;
     }
+
   }
   .d_fixed{
     position: fixed;
@@ -861,6 +914,4 @@
   .el-scrollbar__wrap{
     overflow-x: hidden;
   }
-
-
 </style>

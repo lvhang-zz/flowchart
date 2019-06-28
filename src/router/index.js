@@ -36,6 +36,11 @@ export default new Router({
       path: '/test',
       name: 'test',
       component: ()=>import("../components/test.vue")
+    },
+    {
+      path: '/test3',
+      name: 'test3',
+      component: ()=>import("../components/test3.vue")
     }
   ]
 })
